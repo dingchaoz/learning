@@ -121,7 +121,11 @@ class KNearestNeighbor(object):
     # HINT: Try to formulate the l2 distance using matrix multiplication    #
     #       and two broadcast sums.                                         #
     #########################################################################
-    pass
+    SqSumXtest = np.sum(X**2,axis = 1)
+    SqSumXtrain = np.sum(self.X_train**2,axis = 1)
+    SqSumXtraintest = np.tile(SqSumXtrain,(num_test,1)) + SqSumXtest.reshape(num_test,1)
+    dots = X.dot(self.X_train.T)
+    dists = SqSumXtraintest - 2*dots
     #########################################################################
     #                         END OF YOUR CODE                              #
     #########################################################################
