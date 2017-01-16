@@ -1,4 +1,5 @@
 import numpy as np
+from collections import Counter
 
 class KNearestNeighbor(object):
   """ a kNN classifier with L2 distance """
@@ -126,6 +127,7 @@ class KNearestNeighbor(object):
     SqSumXtraintest = np.tile(SqSumXtrain,(num_test,1)) + SqSumXtest.reshape(num_test,1)
     dots = X.dot(self.X_train.T)
     dists = SqSumXtraintest - 2*dots
+
     #########################################################################
     #                         END OF YOUR CODE                              #
     #########################################################################
@@ -157,7 +159,12 @@ class KNearestNeighbor(object):
       # neighbors. Store these labels in closest_y.                           #
       # Hint: Look up the function numpy.argsort.                             #
       #########################################################################
-      pass
+      # sorted = np.argsort(dists[i,:])
+      # indices = np.where(sorted <= k)
+      # closest_y = self.y_train[indices]
+      labels = self.y_train[np.argsort(dists[i,:])]
+      # print labels.shape
+      closest_y = labels[0:k]
       #########################################################################
       # TODO:                                                                 #
       # Now that you have found the labels of the k nearest neighbors, you    #
@@ -165,7 +172,9 @@ class KNearestNeighbor(object):
       # Store this label in y_pred[i]. Break ties by choosing the smaller     #
       # label.                                                                #
       #########################################################################
-      pass
+      y_pred[i] = Counter(closest_y).most_common(1)[0][0]
+      # u, indices = np.unique(closest_y, return_inverse=True)
+      # y_pred[i] = u[np.argmax(np.bincount(indices))]
       #########################################################################
       #                           END OF YOUR CODE                            # 
       #########################################################################
