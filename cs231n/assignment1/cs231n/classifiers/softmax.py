@@ -33,6 +33,8 @@ def softmax_loss_naive(W, X, y, reg):
   #############################################################################
   # https://github.com/dingchaoz/CS231/blob/master/assignment1/cs231n/classifiers/softmax.py
   # look into the one above for inspiration, the W,X shape are different though
+  # http://math.stackexchange.com/questions/945871/derivative-of-softmax-loss-function
+  # also look into the above discussion to make sure you got the softmax gradient worked right
   loss = 0.0
   for i in xrange(num_train):
     scores = X[i].dot(W)

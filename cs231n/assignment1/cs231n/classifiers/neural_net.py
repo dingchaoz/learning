@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import random
 
 
 class TwoLayerNet(object):
@@ -9,11 +10,8 @@ class TwoLayerNet(object):
   We train the network with a softmax loss function and L2 regularization on the
   weight matrices. The network uses a ReLU nonlinearity after the first fully
   connected layer.
-
   In other words, the network has the following architecture:
-
   input - fully connected layer - ReLU - fully connected layer - softmax
-
   The outputs of the second fully-connected layer are the scores for each class.
   """
 
@@ -22,12 +20,10 @@ class TwoLayerNet(object):
     Initialize the model. Weights are initialized to small random values and
     biases are initialized to zero. Weights and biases are stored in the
     variable self.params, which is a dictionary with the following keys:
-
     W1: First layer weights; has shape (D, H)
     b1: First layer biases; has shape (H,)
     W2: Second layer weights; has shape (H, C)
     b2: Second layer biases; has shape (C,)
-
     Inputs:
     - input_size: The dimension D of the input data.
     - hidden_size: The number of neurons H in the hidden layer.
@@ -40,10 +36,15 @@ class TwoLayerNet(object):
     self.params['b2'] = np.zeros(output_size)
 
   def loss(self, X, y=None, reg=0.0):
+
+    return self.loss_chris(X, y, reg)
+    # return self.loss_carlos(X, y, reg)
+    # return self.loss_dafne(X, y, reg)
+
+  def loss_dafne(self, X, y=None, reg=0.0):
     """
     Compute the loss and gradients for a two layer fully connected neural
     network.
-
     Inputs:
     - X: Input data of shape (N, D). Each X[i] is a training sample.
     - y: Vector of training labels. y[i] is the label for X[i], and each y[i] is
@@ -51,11 +52,95 @@ class TwoLayerNet(object):
       is not passed then we only return scores, and if it is passed then we
       instead return the loss and gradients.
     - reg: Regularization strength.
-
     Returns:
     If y is None, return a matrix scores of shape (N, C) where scores[i, c] is
     the score for class c on input X[i].
+    If y is not None, instead return a tuple of:
+    - loss: Loss (data loss and regularization loss) for this batch of training
+      samples.
+    - grads: Dictionary mapping parameter names to gradients of those parameters
+      with respect to the loss function; has the same keys as self.params.
+    """
+    # Unpack variables from the params dictionary
+    W1, b1 = self.params['W1'], self.params['b1']
+    W2, b2 = self.params['W2'], self.params['b2']
+    N, D = X.shape
 
+    # Compute the forward pass
+    scores = None
+    #############################################################################
+    # Perform the forward pass, computing the class scores for the input. #
+    # Store the result in the scores variable, which should be an array of      #
+    # shape (N, C).                                                             #
+    #############################################################################
+    relu = lambda x: np.maximum(x, 0)
+    h0 = X.dot(W1) + b1
+    h1 = relu(h0)
+    h2 = h1.dot(W2) + b2
+    scores = h2
+    #############################################################################
+    #                              END OF YOUR CODE                             #
+    #############################################################################
+
+    # If the targets are not given then jump out, we're done
+    if y is None:
+      return scores
+
+    # Compute the loss
+    loss = None
+    #############################################################################
+    # Finish the forward pass, and compute the loss. This should include  #
+    # both the data loss and L2 regularization for W1 and W2. Store the result  #
+    # in the variable loss, which should be a scalar. Use the Softmax           #
+    # classifier loss. So that your results match ours, multiply the            #
+    # regularization loss by 0.5                                                #
+    #############################################################################
+    maxscore = np.max(scores, 1)
+    shifted_scores = scores - maxscore[:,np.newaxis]
+    probs = np.exp(shifted_scores) / np.sum(np.exp(shifted_scores), 1)[:,np.newaxis]
+    losses = -np.log( probs[xrange(N), y] )
+    loss = losses.sum() / N
+    loss += 0.5 * reg * (np.sum(W1*W1) + np.sum(W2*W2) + sum(b1*b1) + sum(b2*b2))
+    #############################################################################
+    #                              END OF YOUR CODE                             #
+    #############################################################################
+
+    # Backward pass: compute gradients
+    grads = {}
+    #############################################################################
+    # TODO: Compute the backward pass, computing the derivatives of the weights #
+    # and biases. Store the results in the grads dictionary. For example,       #
+    # grads['W1'] should store the gradient on W1, and be a matrix of same size #
+    #############################################################################
+    true_indices = np.zeros(probs.shape)
+    true_indices[xrange(N),y] = 1
+    ds = (probs - true_indices)/N
+    grads['W2'] = h1.transpose().dot(ds) + reg*W2
+    grads['b2'] = ds.sum(axis=0)
+    dh1 = ds.dot(W2.transpose())
+    dh0 = dh1*1*(np.maximum(h0, 0)>0)
+    grads['W1'] = X.transpose().dot(dh0) + reg*W1
+    grads['b1'] = dh0.sum(axis=0)
+
+    #############################################################################
+    #                              END OF YOUR CODE                             #
+    #############################################################################
+    return loss, grads
+
+  def loss_chris(self, X, y=None, reg=0.0):
+    """
+    Compute the loss and gradients for a two layer fully connected neural
+    network.
+    Inputs:
+    - X: Input data of shape (N, D). Each X[i] is a training sample.
+    - y: Vector of training labels. y[i] is the label for X[i], and each y[i] is
+      an integer in the range 0 <= y[i] < C. This parameter is optional; if it
+      is not passed then we only return scores, and if it is passed then we
+      instead return the loss and gradients.
+    - reg: Regularization strength.
+    Returns:
+    If y is None, return a matrix scores of shape (N, C) where scores[i, c] is
+    the score for class c on input X[i].
     If y is not None, instead return a tuple of:
     - loss: Loss (data loss and regularization loss) for this batch of training
       samples.
@@ -74,7 +159,13 @@ class TwoLayerNet(object):
     # Store the result in the scores variable, which should be an array of      #
     # shape (N, C).                                                             #
     #############################################################################
-    pass
+    num_classes = W2.shape[1]
+    num_images = X.shape[0]
+
+    H1 = X.dot(W1) + b1
+    relu1 = np.maximum(H1, np.zeros_like(H1))
+    scores = W2.T.dot(relu1.T).T + b2
+
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
@@ -92,7 +183,148 @@ class TwoLayerNet(object):
     # classifier loss. So that your results match ours, multiply the            #
     # regularization loss by 0.5                                                #
     #############################################################################
-    pass
+    log_c = -np.max(scores, axis=1)
+    exp_scores = np.exp((scores.T + log_c).T)
+    exp_correct_class = exp_scores[range(len(y)),y]
+    sum_exp_classes = np.sum(exp_scores, axis = 1)
+    softmax = exp_correct_class / sum_exp_classes
+    sum_loss = -np.log(softmax)
+    softmax_loss = np.mean(sum_loss)
+
+    W = np.hstack((W1.flatten(), W2.flatten(), b1.flatten(), b2.flatten()))
+
+    regularization = 0.5 * reg * (np.sum(W1 * W1) + np.sum(W2 * W2))
+    # regularization = 0.5 * reg * np.sum(W * W)
+    loss = softmax_loss + regularization
+    ### Note to self: Scores is correct but loss isn't yet.
+    # I think it isn't the regularization (alone) as that term is much smaller
+    # than the discrepancy between the correct loss and mine.
+
+
+    #############################################################################
+    #                              END OF YOUR CODE                             #
+    #############################################################################
+
+    # Backward pass: compute gradients
+    grads = {}
+    dW1 = np.zeros_like(W1)
+    dW2 = np.zeros_like(W2)
+    db1 = np.zeros_like(b1)
+    db2 = np.zeros_like(b2)
+    #############################################################################
+    # TODO: Compute the backward pass, computing the derivatives of the weights #
+    # and biases. Store the results in the grads dictionary. For example,       #
+    # grads['W1'] should store the gradient on W1, and be a matrix of same size #
+    #############################################################################
+
+    ### Gradient of loss wrt parameters through regularization
+    dRegularization = 1.0
+    dW1 += dRegularization * reg * W1
+    dW2 += dRegularization * reg * W2
+
+
+    # Carlos
+    dfyi = np.zeros(scores.shape).T
+    dfyi[y,range(N)] = 1
+    dfj = (np.exp(scores.T)/np.sum(np.exp(scores.T), axis = 0))
+    dScores = ((dfj - dfyi)/N).T
+
+    dW2 += dScores.T.dot(relu1).T
+
+    ### Gradient of loss wrt scores
+    #dSoftmax_loss = 1.0
+    #dSum_loss = (1.0 / num_images) * dSoftmax_loss
+    #dSoftmax = (-1.0 / softmax) * dSum_loss
+    #dSum_exp_classes = - (1.0 / (sum_exp_classes * sum_exp_classes)) * dSoftmax
+    #dExp_correct_class = 1.0 * dSoftmax
+    #dExp_scores = np.asarray([dSum_exp_classes]).T * np.ones((1.0, num_classes))
+    #dExp_scores[range(len(y)),y] += dExp_correct_class
+    #dScores = exp_scores * dExp_scores
+
+    ### Gradient of scores wrt parameters
+    db2 += np.sum(dScores, axis=0)
+    # dW2 += np.sum(relu1.T.dot(dScores), axis=0)
+    dRelu1 = W2.dot(dScores.T)
+    dH1 = (H1 > 0) * dRelu1.T
+    db1 += np.sum(dH1, axis=0)
+    dW1 += X.T.dot(dH1)
+
+
+
+    grads = {'W1' : dW1, 'W2' : dW2, 'b1' : db1, 'b2' : db2}
+    #############################################################################
+    #                              END OF YOUR CODE                             #
+    #############################################################################
+
+    return loss, grads
+
+  def loss_carlos(self, X, y=None, reg=0.0):
+    """
+    Compute the loss and gradients for a two layer fully connected neural
+    network.
+    Inputs:
+    - X: Input data of shape (N, D). Each X[i] is a training sample.
+    - y: Vector of training labels. y[i] is the label for X[i], and each y[i] is
+      an integer in the range 0 <= y[i] < C. This parameter is optional; if it
+      is not passed then we only return scores, and if it is passed then we
+      instead return the loss and gradients.
+    - reg: Regularization strength.
+    Returns:
+    If y is None, return a matrix scores of shape (N, C) where scores[i, c] is
+    the score for class c on input X[i].
+    If y is not None, instead return a tuple of:
+    - loss: Loss (data loss and regularization loss) for this batch of training
+      samples.
+    - grads: Dictionary mapping parameter names to gradients of those parameters
+      with respect to the loss function; has the same keys as self.params.
+    """
+    # Unpack variables from the params dictionary
+    W1, b1 = self.params['W1'], self.params['b1']
+    W2, b2 = self.params['W2'], self.params['b2']
+    N, D = X.shape
+
+    # Compute the forward pass
+    scores = None
+    #############################################################################
+    # TODO: Perform the forward pass, computing the class scores for the input. #
+    # Store the result in the scores variable, which should be an array of      #
+    # shape (N, C).                                                             #
+    #############################################################################
+    layer1 = X.dot(W1) + b1      # Forward 1st layer
+    layer1[layer1<0] = 0         # ReLU
+    layer2 = layer1.dot(W2) + b2 # Forward 2nd layer
+    scores = layer2              # This seems correct, but maybe check why ReLU only on first layer
+
+    #############################################################################
+    #                              END OF YOUR CODE                             #
+    #############################################################################
+
+    # If the targets are not given then jump out, we're done
+    if y is None:
+      return scores
+
+    # Compute the loss
+    loss = 0.0
+    #############################################################################
+    # TODO: Finish the forward pass, and compute the loss. This should include  #
+    # both the data loss and L2 regularization for W1 and W2. Store the result  #
+    # in the variable loss, which should be a scalar. Use the Softmax           #
+    # classifier loss. So that your results match ours, multiply the            #
+    # regularization loss by 0.5                                                #
+    #############################################################################
+    # N is the Number of samples in training batch
+    maxScores = scores.max()
+    fj = (scores - maxScores).T      # normalize Scores
+    fyi = fj[y,range(N)]             # correct scores
+
+    # Li = -np.log( np.exp(fyi)/np.sum(np.exp(fj), axis=0))
+    # or alternatively -- equivalent expressions
+    Li = -fyi + np.log(np.sum(np.exp(fj), axis=0))
+
+    mu_Li = np.mean( Li )                               # dataLoss
+    RW = 0.5 * reg * (np.sum(W1*W1) + np.sum(W2*W2))    # regLoss
+
+    loss = mu_Li + RW
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
@@ -104,11 +336,34 @@ class TwoLayerNet(object):
     # and biases. Store the results in the grads dictionary. For example,       #
     # grads['W1'] should store the gradient on W1, and be a matrix of same size #
     #############################################################################
-    pass
-    #############################################################################
-    #                              END OF YOUR CODE                             #
-    #############################################################################
 
+    dfj = (np.exp(fj)/np.sum(np.exp(fj), axis = 0)).T
+    dfyi = np.zeros(fj.shape)
+    dfyi[y,range(N)] = 1
+
+    dfj = (np.exp(fj)/np.sum(np.exp(fj), axis = 0))
+    dLi = (dfj - dfyi)/N
+
+    db2 = dLi.sum(axis=1)
+    dW2 = dLi.dot(layer1).T + reg*W2
+
+    dLayer1 = dLi.T.dot(W2.T)
+    dLayer1[layer1<=0] = 0
+
+    db1 = dLayer1.sum(axis=0)
+    dW1 = dLayer1.T.dot(X).T + reg*W1
+
+    assert db2.shape==b2.shape
+    assert dW2.shape==W2.shape
+    assert db1.shape==b1.shape
+    assert dW1.shape==W1.shape
+
+    grads = {
+        'b2': db2,
+        'W2': dW2,
+        'b1': db1,
+        'W1': dW1
+    }
     return loss, grads
 
   def train(self, X, y, X_val, y_val,
@@ -117,7 +372,6 @@ class TwoLayerNet(object):
             batch_size=200, verbose=False):
     """
     Train this neural network using stochastic gradient descent.
-
     Inputs:
     - X: A numpy array of shape (N, D) giving training data.
     - y: A numpy array f shape (N,) giving training labels; y[i] = c means that
@@ -134,6 +388,7 @@ class TwoLayerNet(object):
     """
     num_train = X.shape[0]
     iterations_per_epoch = max(num_train / batch_size, 1)
+    accuracy_sample_rate = 10
 
     # Use SGD to optimize the parameters in self.model
     loss_history = []
@@ -148,7 +403,17 @@ class TwoLayerNet(object):
       # TODO: Create a random minibatch of training data and labels, storing  #
       # them in X_batch and y_batch respectively.                             #
       #########################################################################
-      pass
+      sampleIndices = np.random.choice(num_train, batch_size)
+
+      selected_indices = sampleIndices[0 : max(batch_size, len(sampleIndices))]
+      # assert len(selected_indices) == batch_size
+
+      X_batch = X[selected_indices, :]
+      assert X_batch.shape[1] == X.shape[1]
+      # assert X_batch.shape[0] != X.shape[0]
+
+      y_batch = y[selected_indices]
+      # assert y_batch.shape[0] != y.shape[0]
       #########################################################################
       #                             END OF YOUR CODE                          #
       #########################################################################
@@ -163,7 +428,10 @@ class TwoLayerNet(object):
       # using stochastic gradient descent. You'll need to use the gradients   #
       # stored in the grads dictionary defined above.                         #
       #########################################################################
-      pass
+      self.params['W1'] -= learning_rate * grads['W1']
+      self.params['W2'] -= learning_rate * grads['W2']
+      self.params['b1'] -= learning_rate * grads['b1']
+      self.params['b2'] -= learning_rate * grads['b2']
       #########################################################################
       #                             END OF YOUR CODE                          #
       #########################################################################
@@ -171,14 +439,15 @@ class TwoLayerNet(object):
       if verbose and it % 100 == 0:
         print 'iteration %d / %d: loss %f' % (it, num_iters, loss)
 
-      # Every epoch, check train and val accuracy and decay learning rate.
-      if it % iterations_per_epoch == 0:
+      if it % accuracy_sample_rate == 0:
         # Check accuracy
         train_acc = (self.predict(X_batch) == y_batch).mean()
         val_acc = (self.predict(X_val) == y_val).mean()
         train_acc_history.append(train_acc)
         val_acc_history.append(val_acc)
 
+      # Every epoch, check train and val accuracy and decay learning rate.
+      if it % iterations_per_epoch == 0:
         # Decay learning rate
         learning_rate *= learning_rate_decay
 
@@ -193,11 +462,9 @@ class TwoLayerNet(object):
     Use the trained weights of this two-layer network to predict labels for
     data points. For each data point we predict scores for each of the C
     classes, and assign each data point to the class with the highest score.
-
     Inputs:
     - X: A numpy array of shape (N, D) giving N D-dimensional data points to
       classify.
-
     Returns:
     - y_pred: A numpy array of shape (N,) giving predicted labels for each of
       the elements of X. For all i, y_pred[i] = c means that X[i] is predicted
@@ -208,11 +475,24 @@ class TwoLayerNet(object):
     ###########################################################################
     # TODO: Implement this function; it should be VERY simple!                #
     ###########################################################################
-    pass
+    W1, b1 = self.params['W1'], self.params['b1']
+    W2, b2 = self.params['W2'], self.params['b2']
+    N, D = X.shape
+
+    # Compute the forward pass
+    scores = None
+    #############################################################################
+    # TODO: Perform the forward pass, computing the class scores for the input. #
+    # Store the result in the scores variable, which should be an array of      #
+    # shape (N, C).                                                             #
+    #############################################################################
+
+    H1 = X.dot(W1) + b1
+    relu1 = np.maximum(H1, np.zeros_like(H1))
+    scores = relu1.dot(W2) + b2
+    y_pred = np.argmax(scores, axis=1)
     ###########################################################################
     #                              END OF YOUR CODE                           #
     ###########################################################################
 
     return y_pred
-
-
