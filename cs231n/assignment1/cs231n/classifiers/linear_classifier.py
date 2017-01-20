@@ -1,4 +1,5 @@
 import numpy as np
+import random
 from cs231n.classifiers.linear_svm import *
 from cs231n.classifiers.softmax import *
 
@@ -49,7 +50,23 @@ class LinearClassifier(object):
       # Hint: Use np.random.choice to generate indices. Sampling with         #
       # replacement is faster than sampling without replacement.              #
       #########################################################################
-      pass
+      indices = range(0, X.shape[0])
+      # Assert is used to tell the program to test that condition, and trigger an error if the condition is false
+      assert len(indices) > 20
+      assert len(indices) < 100000
+
+      random.shuffle(indices)
+      selected_indices = indices[0 : batch_size]
+      assert len(selected_indices) == batch_size
+
+      X_batch = X[selected_indices, :]
+      assert X_batch.shape[1] == X.shape[1]
+      assert X_batch.shape[0] != X.shape[0]
+
+      y_batch = y[selected_indices]
+      assert y_batch.shape[0] != y.shape[0]
+
+
       #########################################################################
       #                       END OF YOUR CODE                                #
       #########################################################################
@@ -63,7 +80,7 @@ class LinearClassifier(object):
       # TODO:                                                                 #
       # Update the weights using the gradient and the learning rate.          #
       #########################################################################
-      pass
+      self.W -= learning_rate * grad
       #########################################################################
       #                       END OF YOUR CODE                                #
       #########################################################################
@@ -91,7 +108,11 @@ class LinearClassifier(object):
     # TODO:                                                                   #
     # Implement this method. Store the predicted labels in y_pred.            #
     ###########################################################################
-    pass
+    scores = X.dot(self.W)
+    assert scores.shape[1] == 10
+    assert scores.shape[0] == X.shape[0]
+
+    y_pred = np.argmax(scores, axis=1)
     ###########################################################################
     #                           END OF YOUR CODE                              #
     ###########################################################################
