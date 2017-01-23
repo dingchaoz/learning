@@ -164,8 +164,9 @@ class TwoLayerNet(object):
 
     H1 = X.dot(W1) + b1
     relu1 = np.maximum(H1, np.zeros_like(H1))
-    scores = W2.T.dot(relu1.T).T + b2
-
+    # scores = W2.T.dot(relu1.T).T + b2
+    scores = relu1.dot(W2) + b2
+    
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
