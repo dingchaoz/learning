@@ -70,10 +70,15 @@ def ParseAOI(xml):
 def main():
     xml = 'listval_20170101_235902.xml'
     res,includes,excludes,num_trans,num_ats_on,num_ats_off = ParseAOI(xml)
-    return res,includes,excludes,num_trans,num_ats_on,num_ats_off
+    #return res,includes,excludes,num_trans,num_ats_on,num_ats_off
 
 if __name__ == '__main__':
     main()
+    # xml = 'listval_20170101_235902.xml'
+    # res,includes,excludes,num_trans,num_ats_on,num_ats_off = ParseAOI(xml)
+    # return res,includes,excludes,num_trans,num_ats_on,num_ats_off
+    #print 1,2,3
+
     # includes,excludes = getAgentList('listval_20170101_235902.xml')
     # # Index the list to show order of display
     # includes_indexed = [[(x,y.index(x)) for x in y] for  y in includes]
