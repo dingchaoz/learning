@@ -1,4 +1,7 @@
 import pandas as pd
+# utm is installed by running python setup.py install in the directory at ejlq@da74wbedge1 [/home/ejlq/utm-0.4.1]
+import utm
+from scipy.spatial.distance import pdist, squareform
 
 
 # The agent pols data is depracated, need to use the new one once is available
@@ -27,6 +30,7 @@ chicagoAgents = DFAgentLoc[DFAgentLoc.CITY == 'Chicago']
 chicagoAgentPols = chicagoAgents.merge(DFAgentPols,left_on = 'ST_AGT_CD',right_on = 'AGENT_SERV_ST_CD_AGENT_CD')
 # Remove not needed or duplicated columns
 chicagoAgentPols.drop(chicagoAgentPols[['ZIP','POSTL_ST_CD_y','STATE','CITY_y','COUNTY','AGENT_SERV_ST_CD_AGENT_CD','SF_RGN_CD', 'ZIP_CD','PREF_NM','ORGZN_NM']],axis = 1,inplace = True)
+
 # Make pol lat and long values valid
 def divide(x):
 	try:
@@ -35,3 +39,28 @@ def divide(x):
 		pass
 chicagoAgentPols['QMSLAT'] = chicagoAgentPols['QMSLAT'].apply(divide)
 chicagoAgentPols['QMSLON'] = chicagoAgentPols['QMSLON'].apply(divide)
+chicagoAgentPols['lat_long_pol'] = chicagoAgentPols[['QMSLAT', 'QMSLON']].apply(tuple, axis=1)
+chicagoAgentPols['lat_long_agent'] = chicagoAgentPols[['LATITUDE', 'LONGITUDE']].apply(tuple, axis=1)
+
+# Convert lat lon to utm
+def toUTM(x):
+	try:
+		return utm.from_latlon(x[0],x[1])[:2]
+	except:
+		pass
+chicagoAgentPols['utm_pol'] = chicagoAgentPols['lat_long_pol'].apply(toUTM) 
+chicagoAgentPols['utm_agent'] = chicagoAgentPols['lat_long_agent'].apply(toUTM)
+# scpy spatial distance:https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.pdist.html
+# A good discussion around disances computation http://stackoverflow.com/questions/13079563/how-does-condensed-distance-matrix-work-pdist
+
+pdist(np.array([chicagoAgentPols['utm_pol'][0],chicagoAgentPols['utm_agent'][0]]))
+def getDist(x):
+	try:
+		#return pdist(np.array(x[0],x[1]))
+		y = np.array([x[0],x[1]])
+		#print pdist(y)
+		return pdist(y)[0]
+	except:
+		pass
+
+test = chicagoAgentPols[['utm_agent','utm_pol']].apply(getDist,axis = 1)
