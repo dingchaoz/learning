@@ -1,6 +1,8 @@
 import pandas as pd
+import numpy as np
 # utm is installed by running python setup.py install in the directory at ejlq@da74wbedge1 [/home/ejlq/utm-0.4.1]
 import utm
+import matplotlib.pyplot as plt
 from scipy.spatial.distance import pdist, squareform
 
 
@@ -53,7 +55,7 @@ chicagoAgentPols['utm_agent'] = chicagoAgentPols['lat_long_agent'].apply(toUTM)
 # scpy spatial distance:https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.pdist.html
 # A good discussion around disances computation http://stackoverflow.com/questions/13079563/how-does-condensed-distance-matrix-work-pdist
 
-pdist(np.array([chicagoAgentPols['utm_pol'][0],chicagoAgentPols['utm_agent'][0]]))
+#pdist(np.array([chicagoAgentPols['utm_pol'][0],chicagoAgentPols['utm_agent'][0]]))
 def getDist(x):
 	try:
 		#return pdist(np.array(x[0],x[1]))
@@ -63,4 +65,6 @@ def getDist(x):
 	except:
 		pass
 
-test = chicagoAgentPols[['utm_agent','utm_pol']].apply(getDist,axis = 1)
+chicagoAgentPols['dist'] = chicagoAgentPols[['utm_agent','utm_pol']].apply(getDist,axis = 1)
+grouped = chicagoAgentPols.groupby('ST_AGT_CD')
+grouped['dist'].agg([np.mean,np.std])
