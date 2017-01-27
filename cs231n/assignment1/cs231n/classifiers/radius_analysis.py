@@ -31,7 +31,7 @@ chicagoAgents = DFAgentLoc[DFAgentLoc.CITY == 'Chicago']
 # Merge chicago agents with their pols
 chicagoAgentPols = chicagoAgents.merge(DFAgentPols,left_on = 'ST_AGT_CD',right_on = 'AGENT_SERV_ST_CD_AGENT_CD')
 # Remove not needed or duplicated columns
-chicagoAgentPols.drop(chicagoAgentPols[['ZIP','POSTL_ST_CD_y','STATE','CITY_y','COUNTY','AGENT_SERV_ST_CD_AGENT_CD','SF_RGN_CD', 'ZIP_CD','PREF_NM','ORGZN_NM']],axis = 1,inplace = True)
+chicagoAgentPols.drop(chicagoAgentPols[['ZIP','POSTL_ST_CD_y','STATE','CITY_y','COUNTY','AGENT_SERV_ST_CD_AGENT_CD','SF_RGN_CD','PREF_NM','ORGZN_NM']],axis = 1,inplace = True)
 
 # Make pol lat and long values valid
 def divide(x):
