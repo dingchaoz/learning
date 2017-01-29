@@ -23,15 +23,15 @@ DFAgentLoc = pd.read_csv('/san-data/usecase/agentpm/AgentProductionModel/Agents_
 DFAgentPols['AGENT_SERV_ST_CD_AGENT_CD'] = [x+str(y) for x,y in zip(DFAgentPols['STATE'],DFAgentPols['AGENT'])]
 
 
-# Get agents located in Chicago, NY and SF which are urban metropolitans
-sanfAgents = DFAgentLoc[DFAgentLoc.CITY == 'San Francisco']
-newyorkAgents = DFAgentLoc[DFAgentLoc.CITY == 'New York']
-chicagoAgents = DFAgentLoc[DFAgentLoc.CITY == 'Chicago']
+# # Get agents located in Chicago, NY and SF which are urban metropolitans
+# sanfAgents = DFAgentLoc[DFAgentLoc.CITY == 'San Francisco']
+# newyorkAgents = DFAgentLoc[DFAgentLoc.CITY == 'New York']
+# chicagoAgents = DFAgentLoc[DFAgentLoc.CITY == 'Chicago']
 
-# Merge chicago agents with their pols
-chicagoAgentPols = chicagoAgents.merge(DFAgentPols,left_on = 'ST_AGT_CD',right_on = 'AGENT_SERV_ST_CD_AGENT_CD')
-# Remove not needed or duplicated columns
-chicagoAgentPols.drop(chicagoAgentPols[['ZIP','POSTL_ST_CD_y','STATE','CITY_y','COUNTY','AGENT_SERV_ST_CD_AGENT_CD','SF_RGN_CD','PREF_NM','ORGZN_NM']],axis = 1,inplace = True)
+# # Merge chicago agents with their pols
+# chicagoAgentPols = chicagoAgents.merge(DFAgentPols,left_on = 'ST_AGT_CD',right_on = 'AGENT_SERV_ST_CD_AGENT_CD')
+# # Remove not needed or duplicated columns
+# chicagoAgentPols.drop(chicagoAgentPols[['ZIP','POSTL_ST_CD_y','STATE','CITY_y','COUNTY','AGENT_SERV_ST_CD_AGENT_CD','SF_RGN_CD','PREF_NM','ORGZN_NM']],axis = 1,inplace = True)
 
 # Make pol lat and long values valid
 def divide(x):
@@ -39,10 +39,10 @@ def divide(x):
 		return float(x)/1000000
 	except:
 		pass
-chicagoAgentPols['QMSLAT'] = chicagoAgentPols['QMSLAT'].apply(divide)
-chicagoAgentPols['QMSLON'] = chicagoAgentPols['QMSLON'].apply(divide)
-chicagoAgentPols['lat_long_pol'] = chicagoAgentPols[['QMSLAT', 'QMSLON']].apply(tuple, axis=1)
-chicagoAgentPols['lat_long_agent'] = chicagoAgentPols[['LATITUDE', 'LONGITUDE']].apply(tuple, axis=1)
+# chicagoAgentPols['QMSLAT'] = chicagoAgentPols['QMSLAT'].apply(divide)
+# chicagoAgentPols['QMSLON'] = chicagoAgentPols['QMSLON'].apply(divide)
+# chicagoAgentPols['lat_long_pol'] = chicagoAgentPols[['QMSLAT', 'QMSLON']].apply(tuple, axis=1)
+# chicagoAgentPols['lat_long_agent'] = chicagoAgentPols[['LATITUDE', 'LONGITUDE']].apply(tuple, axis=1)
 
 # Convert lat lon to utm
 def toUTM(x):
@@ -50,8 +50,8 @@ def toUTM(x):
 		return utm.from_latlon(x[0],x[1])[:2]
 	except:
 		pass
-chicagoAgentPols['utm_pol'] = chicagoAgentPols['lat_long_pol'].apply(toUTM) 
-chicagoAgentPols['utm_agent'] = chicagoAgentPols['lat_long_agent'].apply(toUTM)
+# chicagoAgentPols['utm_pol'] = chicagoAgentPols['lat_long_pol'].apply(toUTM) 
+# chicagoAgentPols['utm_agent'] = chicagoAgentPols['lat_long_agent'].apply(toUTM)
 # scpy spatial distance:https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.pdist.html
 # A good discussion around disances computation http://stackoverflow.com/questions/13079563/how-does-condensed-distance-matrix-work-pdist
 
@@ -65,6 +65,40 @@ def getDist(x):
 	except:
 		pass
 
-chicagoAgentPols['dist'] = chicagoAgentPols[['utm_agent','utm_pol']].apply(getDist,axis = 1)
-grouped = chicagoAgentPols.groupby('ST_AGT_CD')
-grouped['dist'].agg([np.mean,np.std])
+def cityAgentsPrep(cityName):
+	cityAgents = DFAgentLoc[DFAgentLoc.CITY == cityName]
+	#Merge chicago agents with their pols
+	cityAgentPols = cityAgents.merge(DFAgentPols,left_on = 'ST_AGT_CD',right_on = 'AGENT_SERV_ST_CD_AGENT_CD')
+	# Remove not needed or duplicated columns
+	cityAgentPols.drop(cityAgentPols[['ZIP','POSTL_ST_CD_y','STATE','CITY_y','COUNTY','AGENT_SERV_ST_CD_AGENT_CD','SF_RGN_CD','PREF_NM','ORGZN_NM']],axis = 1,inplace = True)
+	# Prepare lat lon in the right format
+	cityAgentPols['QMSLAT'] = cityAgentPols['QMSLAT'].apply(divide)
+	cityAgentPols['QMSLON'] = cityAgentPols['QMSLON'].apply(divide)
+	cityAgentPols['lat_long_pol'] = cityAgentPols[['QMSLAT', 'QMSLON']].apply(tuple, axis=1)
+	cityAgentPols['lat_long_agent'] = cityAgentPols[['LATITUDE', 'LONGITUDE']].apply(tuple, axis=1)
+	# Convert to utm from lat lon
+	cityAgentPols['utm_pol'] = cityAgentPols['lat_long_pol'].apply(toUTM) 
+	cityAgentPols['utm_agent'] = cityAgentPols['lat_long_agent'].apply(toUTM)
+	cityAgentPols['dist'] = cityAgentPols[['utm_agent','utm_pol']].apply(getDist,axis = 1)
+
+	return cityAgentPols
+
+def groupbyAnalysis(cityAgentPols):
+	groupedSTAGT = cityAgentPols.groupby('ST_AGT_CD')
+	DF_Dist_STAGT = groupedSTAGT['dist'].agg([np.mean,np.std])
+	groupedZIP = cityAgentPols.groupby('ZIP_CD')
+	DF_Dist_ZIP = groupedZIP['dist'].agg([np.mean,np.std])
+	return DF_Dist_STAGT,DF_Dist_ZIP
+
+newyorkAgentPols = cityAgentsPrep('New York')
+NY_Dist_STAGT,NY_Dist_ZIP = groupbyAnalysis(newyorkAgentPols)
+chicagoAgentPols = cityAgentsPrep('Chicago')
+CHG_Dist_STAGT,CHG_Dist_ZIP = groupbyAnalysis(chicagoAgentPols)
+sanfAgentPols = cityAgentsPrep('San Francisco')
+SF_Dist_STAGT,SF_Dist_ZIP = groupbyAnalysis(sanfAgentPols)
+
+
+
+# chicagoAgentPols['dist'] = chicagoAgentPols[['utm_agent','utm_pol']].apply(getDist,axis = 1)
+# grouped = chicagoAgentPols.groupby('ST_AGT_CD')
+# grouped['dist'].agg([np.mean,np.std])
