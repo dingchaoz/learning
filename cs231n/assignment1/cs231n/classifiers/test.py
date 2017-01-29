@@ -36,6 +36,9 @@ sum_exp_classes = np.sum(scores_exp, axis = 1)
 softmax = correct_class_score_exp/ sum_exp_classes
 sum_loss = -np.log(softmax)
 softmax_loss = np.mean(sum_loss)
+regularization = 0.5 * (np.sum(W1 * W1) + np.sum(W2 * W2))
+ # regularization = 0.5 * reg * np.sum(W * W)
+loss = softmax_loss + regularization
 
 # The other method, produces the same result
 # log_c = -np.max(scores, axis=1)
@@ -45,3 +48,6 @@ softmax_loss = np.mean(sum_loss)
 # softmax = exp_correct_class / sum_exp_classes
 # sum_loss = -np.log(softmax)
 # softmax_loss = np.mean(sum_loss)
+# regularization = 0.5 * reg * (np.sum(W1 * W1) + np.sum(W2 * W2))
+#  # regularization = 0.5 * reg * np.sum(W * W)
+# loss = softmax_loss + regularization
