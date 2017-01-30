@@ -19,6 +19,11 @@ b1 = np.zeros(hidden_size)
 W2 = std * np.random.randn(hidden_size, output_size)
 b2 = np.zeros(output_size)
 
+#############################################################################
+    # Compute the backward pass, computing the derivatives of the weights #
+    # and biases. Store the results in the grads dictionary. For example,       #
+    # grads['W1'] should store the gradient on W1, and be a matrix of same size #
+ #############################################################################
 
  # Compute the forward pass
 scores = None

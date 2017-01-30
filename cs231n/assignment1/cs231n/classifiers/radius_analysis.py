@@ -86,8 +86,12 @@ def cityAgentsPrep(cityName):
 def groupbyAnalysis(cityAgentPols):
 	groupedSTAGT = cityAgentPols.groupby('ST_AGT_CD')
 	DF_Dist_STAGT = groupedSTAGT['dist'].agg([np.mean,np.std])
+	DF_Dist_STAGT['80Perc'] = groupedSTAGT['dist'].quantile(.8)
+	DF_Dist_STAGT['90Perc'] = groupedSTAGT['dist'].quantile(.9)
 	groupedZIP = cityAgentPols.groupby('ZIP_CD')
 	DF_Dist_ZIP = groupedZIP['dist'].agg([np.mean,np.std])
+	DF_Dist_ZIP['80Perc'] = groupedZIP['dist'].quantile(.8)
+	DF_Dist_zip['90Perc'] = groupedZIP['dist'].quantile(.9)
 	return DF_Dist_STAGT,DF_Dist_ZIP
 
 newyorkAgentPols = cityAgentsPrep('New York')
@@ -97,6 +101,21 @@ CHG_Dist_STAGT,CHG_Dist_ZIP = groupbyAnalysis(chicagoAgentPols)
 sanfAgentPols = cityAgentsPrep('San Francisco')
 SF_Dist_STAGT,SF_Dist_ZIP = groupbyAnalysis(sanfAgentPols)
 
+#Reset index and add state column
+NY_Dist_ZIP.reset_index(inplace = True)
+NY_Dist_ZIP['ST'] = 'NY'
+SF_Dist_ZIP.reset_index(inplace = True)
+SF_Dist_ZIP['ST'] = 'SF'
+CHG_Dist_ZIP.reset_index(inplace = True)
+CHG_Dist_ZIP['ST'] = 'CHG'
+DFZIPs = pd.concat([CHG_Dist_ZIP,SF_Dist_ZIP,NY_Dist_ZIP])
+
+########
+# Seaborn plot analysis, 10040 agents in NY are outliers
+########
+
+## Look into agts10040
+agts10040 = newyorkAgentPols[newyorkAgentPols['ZIP_CD'] == '10040']
 
 
 # chicagoAgentPols['dist'] = chicagoAgentPols[['utm_agent','utm_pol']].apply(getDist,axis = 1)
