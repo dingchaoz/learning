@@ -91,7 +91,7 @@ def groupbyAnalysis(cityAgentPols):
 	groupedZIP = cityAgentPols.groupby('ZIP_CD')
 	DF_Dist_ZIP = groupedZIP['dist'].agg([np.mean,np.std])
 	DF_Dist_ZIP['80Perc'] = groupedZIP['dist'].quantile(.8)
-	DF_Dist_zip['90Perc'] = groupedZIP['dist'].quantile(.9)
+	DF_Dist_ZIP['90Perc'] = groupedZIP['dist'].quantile(.9)
 	return DF_Dist_STAGT,DF_Dist_ZIP
 
 newyorkAgentPols = cityAgentsPrep('New York')
