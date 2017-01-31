@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+	
+	<title>Layers Control Tutorial - Leaflet</title>
+
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	
+	<link rel="shortcut icon" type="image/x-icon" href="docs/images/favicon.ico" />
+
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.3/dist/leaflet.css" />
+	<script src="https://unpkg.com/leaflet@1.0.3/dist/leaflet.js"></script>
+	<script src="https://d3js.org/d3.v4.min.js"></script>
+
+
+	<style>
+		#map {
+			width: 600px;
+			height: 400px;
+		}
+	</style>
+
+	
+</head>
+<body>
+
+<div id='map'></div>
+
+<script>
+var dataset; // Initiate dateset to hold ny policy holder data
+	// Load into dataset var
+	d3.csv("newyorkAgentPols.csv", function(data) {
+  		dataset = data;
+	});
+
+	function is10040(value) {
+  		return value.ZIP_CD == "10040";
+	};
+
+	function is10075(value) {
+  		return value.ZIP_CD == "10075";
+	};
+
+	// Filter out agent 10040's pol holder
+	//agt10040 = dataset.filter(function(el){return el.ZIP_CD == "10040"});
+	agt10040 = dataset.filter(is10040);
+	agt10075 = dataset.filter(is10075);
+
+	var group10040 = new L.LayerGroup();
+	var group10075 = new L.LayerGroup();
+	var rad10040_80P = new L.LayerGroup();
+	var rad10040_90P = new L.LayerGroup();
+	var rad10075_80P = new L.LayerGroup();
+	var rad10075_90P = new L.LayerGroup();
+
+
+	for (i = 0;i<agt10040.length;i++){ 
+
+	L.marker([parseFloat(agt10040[i].QMSLAT), parseFloat(agt10040[i].QMSLON)]).bindPopup(agt10040[i].DATE_EXPIRATION_DATE).addTo(group10040)
+	};
+
+	L.circle([40.8632, -73.927], {
+	    color: 'red',
+	    fillColor: '#f03',
+	    fillOpacity: 0.5,
+	    radius: 93362.609334
+	}).addTo(rad10040_80P);
+
+	L.marker([40.8632, -73.927], {
+	}).addTo(rad10040_90P);
+	L.marker([40.8632, -73.927], {
+	}).addTo(rad10040_80P);
+
+	L.circle([40.8632, -73.927], {
+	    color: 'red',
+	    fillColor: '#f03',
+	    fillOpacity: 0.5,
+	    radius: 96268.033089
+	}).addTo(rad10040_90P);
+
+	L.circle([40.774059, -73.959351], {
+	    color: 'red',
+	    fillColor: '#f03',
+	    fillOpacity: 0.5,
+	    radius: 40211.700690
+	}).addTo(rad10075_80P);
+
+	L.circle([40.774059, -73.959351], {
+	    color: 'red',
+	    fillColor: '#f03',
+	    fillOpacity: 0.5,
+	    radius: 80872.261352
+	}).addTo(rad10075_90P);
+
+	L.marker([40.774059, -73.959351], {
+	}).addTo(rad10075_90P);
+	L.marker([40.774059, -73.959351], {
+	}).addTo(rad10075_80P);
+
+
+
+	for (i = 0;i<agt10075.length;i++){ 
+
+	L.marker([parseFloat(agt10075[i].QMSLAT), parseFloat(agt10075[i].QMSLON)]).bindPopup(agt10075[i].DATE_EXPIRATION_DATE
+		).addTo(group10075)
+	};
+
+
+
+	var mbAttr = 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
+			'<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+			'Imagery © <a href="http://mapbox.com">Mapbox</a>',
+		mbUrl = 'https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpandmbXliNDBjZWd2M2x6bDk3c2ZtOTkifQ._QA7i5Mpkd_m30IGElHziw';
+
+	var grayscale   = L.tileLayer(mbUrl, {id: 'mapbox.light', attribution: mbAttr}),
+		streets  = L.tileLayer(mbUrl, {id: 'mapbox.streets',   attribution: mbAttr});
+
+	var map = L.map('map', {
+		center: [40.8632, -73.927],
+		zoom: 8,
+		layers: [grayscale, group10040,group10075,rad10075_80P,rad10075_90P,rad10040_80P,rad10040_90P]
+	});
+
+	var baseLayers = {
+		"Grayscale": grayscale,
+		"Streets": streets
+	};
+
+	var overlays = {
+		"10040": group10040,
+		"10075": group10075,
+		"80% rad10075":rad10075_80P,
+		"90% rad10075":rad10075_90P,
+		"80% rad10040":rad10040_80P,
+		"90% rad10040":rad10040_90P,
+	};
+
+	L.control.layers(baseLayers, overlays).addTo(map);
+</script>
+
+
+
+</body>
+</html>
