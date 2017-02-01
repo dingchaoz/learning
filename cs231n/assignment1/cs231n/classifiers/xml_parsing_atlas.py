@@ -31,6 +31,9 @@
 #             pass
 #     return includedAgents,excludedAgents
 
+import glob
+import pandas as pd
+
 def ParseAOI(xml):    
     with open(xml, 'r') as content_file:
         content = content_file.read()
@@ -68,8 +71,36 @@ def ParseAOI(xml):
 # the highest score agent, number of agent
 #Per zip code, # of AOI transactions where ATLAS== true, number of agents, actual ATLAS score per agent, actual conversion rate?
 def main():
-    xml = 'listval_20170101_235902.xml'
-    res,includes,excludes,num_trans,num_ats_on,num_ats_off = ParseAOI(xml)
+    #xml = 'listval_20170101_235902.xml'
+    # List all xml files
+    xmlFiles = glob.glob("/san-data/atlas_id/*xml")
+    Date = []
+    Res = []
+    Includes = []
+    Excludes = []
+    Num_trans = []
+    Num_ats_on = []
+    Num_ats_off = []
+
+
+    # Parse xml files
+    for xml in xmlFiles:
+        date = xml.split('_')[1]
+        res,includes,excludes,num_trans,num_ats_on,num_ats_off = ParseAOI(xml)
+        Date.append(date)
+        Res.append(res)
+        Includes.append(includes)
+        Excludes.append(excludes)
+        Num_trans.append(num_trans)
+        Num_ats_on.append(num_ats_on)
+        Num_ats_off.append(num_ats_off)
+
+    df_dict = {'Date':Date,'Num':Num_trans,'Num_ats_on':Num_ats_on,'Num_ats_off':Num_ats_off
+    }
+
+    df = pd.DataFrame(df_dict)
+    df.to_csv('testRes.csv')
+
     #return res,includes,excludes,num_trans,num_ats_on,num_ats_off
 
 if __name__ == '__main__':

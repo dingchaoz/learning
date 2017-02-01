@@ -86,9 +86,9 @@ def getTenure(x,y):
 #newyorkAgentPols['TENURE'] = np.vectorize(getTenure)(newyorkAgentPols.DATE_EFFECTIVE_DATE,newyorkAgentPols.DATE_AGENT_ASSIGN_DATE)
 
 #newyorkAgentPols.groupby(['ST_AGT_CD','TENURE']).POL_ZIP.nunique() #Return policy holder count zip for each agent
-newyorkAgentPols.groupby(['ST_AGT_CD','POL_YR']).POL_ZIP.nunique()
-newyorkAgentPols.groupby(['ST_AGT_CD','POL_YR','ZIP_CD']).POL_ZIP.nunique()
-newyorkAgentPols.groupby(['POL_YR']).POL_ZIP.nunique() # show trend overall year for certain areas
+# newyorkAgentPols.groupby(['ST_AGT_CD','POL_YR']).POL_ZIP.nunique()
+# newyorkAgentPols.groupby(['ST_AGT_CD','POL_YR','ZIP_CD']).POL_ZIP.nunique()
+# newyorkAgentPols.groupby(['POL_YR']).POL_ZIP.nunique() # show trend overall year for certain areas
 # Returns policy holder zips
 
 
@@ -145,12 +145,19 @@ CHG_Dist_ZIP.reset_index(inplace = True)
 CHG_Dist_ZIP['ST'] = 'CHG'
 DFZIPs = pd.concat([CHG_Dist_ZIP,SF_Dist_ZIP,NY_Dist_ZIP])
 
+
+### TO-DO:
+# Return neigbourhood zips number of agents, number of house hold, premium sum prediction, etc
+# for all zips, agent tenure in the neigborhood (using existing zips, agents as training data)
+# The returned will be the training Xs
+
+
 ########
 # Seaborn plot analysis, 10040 agents in NY are outliers
 ########
 
 ## Look into agts10040
-agts10040 = newyorkAgentPols[newyorkAgentPols['ZIP_CD'] == '10040']
+#agts10040 = newyorkAgentPols[newyorkAgentPols['ZIP_CD'] == '10040']
 
 
 # chicagoAgentPols['dist'] = chicagoAgentPols[['utm_agent','utm_pol']].apply(getDist,axis = 1)
