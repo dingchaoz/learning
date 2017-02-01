@@ -79,3 +79,123 @@ df_final.to_csv('/san-data/usecase/atlasid/new_data/output_file/ts_actual_foreca
 ######
 # End of initial file construction
 ######
+
+
+
+#####
+## Draw SPC, save in to pdf file and output out of signal agents
+#####
+
+# Need to update to latest threshold agents for any new month
+thres_agents = pd.read_csv('/san-data/usecase/atlasid/csv/thres_agents20169.csv')
+df_final2 = df_final.merge(thres_agents, on='ASSOC_ID', how='inner')
+
+from matplotlib.backends.backend_pdf import PdfPages
+from matplotlib import pyplot as plot
+
+pp = PdfPages('/san-data/usecase/atlasid/csv/SPC_201611.pdf')
+labels = ['2016.'+ str(i) for i in range(1,10)]
+#d = {}
+dlist = []
+
+## Turn off plotting is much quicker
+
+for i in range(0,df_final2.shape[0]):
+    fig = plot.figure(figsize=(10, 4), dpi=100)
+    x = df_final2.iloc[i,-11:].tolist()
+    cc = Spc(x, CHART_X_MR_X)
+    if len(cc._find_violating_points()) > 0:
+        d = {}
+        d[df_final2.iloc[i,0]] = cc._find_violating_points()
+        dlist.append(d)
+#     cc.get_chart()
+#     plt.title(df_final2.iloc[i,0] + ' forecast error control chart')
+#     plt.annotate(cc._find_violating_points(), xy=(0.05, 0.85), xycoords='axes fraction')
+#     plt.xticks(range(0,10),labels,rotation = 'horizontal')
+#     pp.savefig(fig)
+#     plt.close(fig)
+    
+#pp.close()
+print dlist
+
+
+## Save out of control singal results
+import json
+with open('/san-data/usecase/atlasid/new_data/output_file/outlier201611', 'w') as fout:
+    json.dump(dlist, fout)
+
+## Read them back and analyze outliers
+outlierInfo = []
+with open('/san-data/usecase/atlasid/new_data/output_file/outlier201611') as f:
+    for line in f:
+        outlierInfo.append(json.loads(line))
+
+# Analyze 2 month and 3 month in a row outliers
+outlier2_3M = []
+outlier3_3M = []
+for i in outlierInfo[0]:
+    
+    if len(i.values()[0].values()) >=2:
+        outlier2_3M.append(i.values()[0].values())
+        
+    if len(i.values()[0].values()) >=3:
+        outlier3_3M.append(i.values()[0].values())
+
+#### If needed, the following codes plot for out of control agents only
+# errored_assoc = []
+# for i in range(len(outlierInfo[0])):
+#     for key, value in outlierInfo[0][i].iteritems():
+#         errored_assoc.append(key)
+# df_outlier_assoc = df_final[df_final.ASSOC_ID.isin(errored_assoc) ]
+
+# pp = PdfPages('/san-data/usecase/atlasid/new_data/output_file/outlier-spc.pdf')
+# labels = ['2016.'+ str(i) for i in range(1,12)]
+# #d = {}
+# dlist = []
+
+# for i in range(0,df_outlier_assoc.shape[0]):
+#     fig = plot.figure(figsize=(10, 4), dpi=100)
+#     x = df_outlier_assoc.iloc[i,-9:].tolist()
+#     cc = Spc(x, CHART_X_MR_X)
+#     d = {}
+#     d[df_outlier_assoc.iloc[i,0]] = cc._find_violating_points()
+#     dlist.append(d)
+#     cc.get_chart()
+#     plt.title(df_outlier_assoc.iloc[i,0] + ' forecast error control chart')
+#     plt.annotate(cc._find_violating_points(), xy=(0.05, 0.85), xycoords='axes fraction')
+#     plt.xticks(range(0,10),labels,rotation = 'horizontal')
+#     pp.savefig(fig)
+#         #plt.close(fig)
+    
+# pp.close()
+# print dlist
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
