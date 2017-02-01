@@ -65,6 +65,35 @@ def getDist(x):
 	except:
 		pass
 
+##Convert to datetimestamp from string 
+def getYear(x):
+	return x[:4]
+# Get the first 5 digits zip code from the 9 digits zip format
+def getF5Zip(x):
+	return x[:5]
+
+def getAssignDate(x):
+	return x.DATE_AGENT_ASSIGN_DATE.dropna().value_counts().idxmax()
+
+def getTenure(x,y):
+	try:
+		deltaYr = relativedelta(pd.to_datetime(x), pd.to_datetime(y)).years
+		return deltaYr
+	except:
+		pass
+
+
+#newyorkAgentPols['TENURE'] = np.vectorize(getTenure)(newyorkAgentPols.DATE_EFFECTIVE_DATE,newyorkAgentPols.DATE_AGENT_ASSIGN_DATE)
+
+#newyorkAgentPols.groupby(['ST_AGT_CD','TENURE']).POL_ZIP.nunique() #Return policy holder count zip for each agent
+newyorkAgentPols.groupby(['ST_AGT_CD','POL_YR']).POL_ZIP.nunique()
+newyorkAgentPols.groupby(['ST_AGT_CD','POL_YR','ZIP_CD']).POL_ZIP.nunique()
+newyorkAgentPols.groupby(['POL_YR']).POL_ZIP.nunique() # show trend overall year for certain areas
+# Returns policy holder zips
+
+
+
+
 def cityAgentsPrep(cityName):
 	cityAgents = DFAgentLoc[DFAgentLoc.CITY == cityName]
 	#Merge chicago agents with their pols
@@ -80,6 +109,11 @@ def cityAgentsPrep(cityName):
 	cityAgentPols['utm_pol'] = cityAgentPols['lat_long_pol'].apply(toUTM) 
 	cityAgentPols['utm_agent'] = cityAgentPols['lat_long_agent'].apply(toUTM)
 	cityAgentPols['dist'] = cityAgentPols[['utm_agent','utm_pol']].apply(getDist,axis = 1)
+    
+    # Fill in nan for assignment date( NEED TO GET THE RIGHT AGENT APPOINTMENT DATE)
+    #cityAgentPols['DATE_AGENT_ASSIGN_DATE'].fillna(method = 'backfill',inplace = True)
+	cityAgentPols['POL_YR'] = cityAgentPols.DATE_EFFECTIVE_DATE.apply(getYear)
+	cityAgentPols['POL_ZIP'] = cityAgentPols.LOC_ZIP.apply(getF5Zip)
 
 	return cityAgentPols
 
@@ -92,14 +126,15 @@ def groupbyAnalysis(cityAgentPols):
 	DF_Dist_ZIP = groupedZIP['dist'].agg([np.mean,np.std])
 	DF_Dist_ZIP['80Perc'] = groupedZIP['dist'].quantile(.8)
 	DF_Dist_ZIP['90Perc'] = groupedZIP['dist'].quantile(.9)
-	return DF_Dist_STAGT,DF_Dist_ZIP
+	POL_ZIP_CNT = cityAgentPols.groupby(['ST_AGT_CD','POL_YR','ZIP_CD']).POL_ZIP.nunique()
+	return DF_Dist_STAGT,DF_Dist_ZIP,POL_ZIP_CNT
 
 newyorkAgentPols = cityAgentsPrep('New York')
-NY_Dist_STAGT,NY_Dist_ZIP = groupbyAnalysis(newyorkAgentPols)
+NY_Dist_STAGT,NY_Dist_ZIP,NY_POL_ZIP = groupbyAnalysis(newyorkAgentPols)
 chicagoAgentPols = cityAgentsPrep('Chicago')
-CHG_Dist_STAGT,CHG_Dist_ZIP = groupbyAnalysis(chicagoAgentPols)
+CHG_Dist_STAGT,CHG_Dist_ZIP,CHG_POL_ZIP  = groupbyAnalysis(chicagoAgentPols)
 sanfAgentPols = cityAgentsPrep('San Francisco')
-SF_Dist_STAGT,SF_Dist_ZIP = groupbyAnalysis(sanfAgentPols)
+SF_Dist_STAGT,SF_Dist_ZIP,SF_POL_ZIP  = groupbyAnalysis(sanfAgentPols)
 
 #Reset index and add state column
 NY_Dist_ZIP.reset_index(inplace = True)
