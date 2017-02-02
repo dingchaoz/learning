@@ -1,5 +1,6 @@
 import glob
 import pandas as pd
+import numpy as np
 
 def ParseAOI(xml):    
     with open(xml, 'r') as content_file:
@@ -102,7 +103,7 @@ if __name__ == '__main__':
         # Include date column
         dfincludes['Date'] = date
         #dfincludes['Trans'] = None
-        dfincludes['Pos'] = pd.to_numeric(dfincludes['Pos']) # Convert Pos to numeric
+        #dfincludes['Pos'] = pd.to_numeric(dfincludes['Pos']) # Convert Pos to numeric
 
 
         transnums = []
@@ -110,8 +111,8 @@ if __name__ == '__main__':
         df_on = dfincludes[dfincludes.ATLS_APPLIED == 'true']
         transnum = 1
         for i in range(1, df_on.shape[0]):
-            print i
-            if df_on['Pos'].iloc[i] <= df_on['Pos'].iloc[i-1]:
+            
+            if float(df_on['Pos'].iloc[i]) <= float(df_on['Pos'].iloc[i-1]):
                 transnum += 1        
             transnums.append(transnum)
 
@@ -124,7 +125,7 @@ if __name__ == '__main__':
         #df_MaxScoreAgent = df_on[idx]
 
         df_MaxScoreAgent = df_on.sort('ATLS_SCORE',ascending = False).groupby('Trans',as_index = False).first()
-        df_TopAgent = df_on[df_on.Pos ==1]
+        df_TopAgent = df_on[df_on.Pos =='1']
         
         df_total = df_TopAgent.copy()
         df_total.columns = ['TopPos','TopScore','TopAgent','ATLS_APPLIED','Date','Trans']
@@ -157,6 +158,7 @@ if __name__ == '__main__':
     AtlCount_df = pd.DataFrame(AtlCount_dict)
     AtlCount_df.to_csv('AtlCount201701.csv')
 
+    # Construct top displayed and max scored agent concated pd and save to csv
     TopMaxAgt_df = pd.concat(TopMaxAgt)
     TopMaxAgt_df.to_csv('TopMaxAgt201701.csv')
 
