@@ -1,36 +1,3 @@
-#from collections import Counter
-
-# def getAgentList(xml):
-#     with open(xml, 'r') as content_file:
-#         content = content_file.read()
-#     #When file is large
-#     content = content[1:2000]
-#     includedAgents = []
-#     excludedAgents = []
-#     num_trans = len(content.split('<transactionID>')) - 2
-#     for i in range(1,num_trans):
-#         try: 
-#             # The following works for old 2015 xml file only
-#             # includedAgent = [x.split('</officeAssociateID>')[0] \
-#             #              for x in content.split('<transactionID>')\
-#             #              [i].split('<includedOffices><officeAssociateID>')]\
-#             #              [1:]
-#             includedAgents.append(includedAgent)
-#         except:
-#             pass
-#         try:
-#             # The following works for old 2015 xml file only
-#             # excludedAgent = [[x.split('</officeAssociateID>')[0],\
-#             #                   x.split('</officeAssociateID>')[1].\
-#             #                   split('>')[1].replace('</removalReasons','')]\
-#             #                  for x in content.split('<transactionID>')\
-#             #                  [i].split('<removedOffices><officeAssociateID>')]\
-#             #                  [1:]
-#             excludedAgents.append(excludedAgent)
-#         except:
-#             pass
-#     return includedAgents,excludedAgents
-
 import glob
 import pandas as pd
 
@@ -64,12 +31,18 @@ def ParseAOI(xml):
 
     return res,includes,excludes,num_trans,num_ats_on,num_ats_off
 
+# Analyze the includes data to aggregate to per transcation
+# 1 label by transaction 
+# 2 filter out atlas off transactions
+# 3 Record top agent, score, an 
 
     ##Sth TODO: Look at agents whose atlas is on, their display order frequency count
     ## TODO: Count #number of transactions coming through per zipcode
 ## for each transaction the agent atlas score is on, record the actual top one agent,
 # the highest score agent, number of agent
 #Per zip code, # of AOI transactions where ATLAS== true, number of agents, actual ATLAS score per agent, actual conversion rate?
+
+
 # def main():
 #     #xml = 'listval_20170101_235902.xml'
 #     # List all xml files
@@ -110,7 +83,8 @@ if __name__ == '__main__':
     Date = []
     #Res = []
     Includes = []
-    Excludes = []
+    #Excludes = []
+    TopMaxAgt = []
     Num_trans = []
     Num_ats_on = []
     Num_ats_off = []
@@ -126,17 +100,50 @@ if __name__ == '__main__':
         # Construct a df to store includes
         dfincludes = pd.DataFrame(includes,columns = ['Pos','ATLS_SCORE','ASSOC_ID','ATLS_APPLIED'])
         # Include date column
-        dfincludes['Date'] = date * dfincludes.shape[0]
-        # Append the df into a list
-        Includes.append(dfincludes)
+        dfincludes['Date'] = date
+        #dfincludes['Trans'] = None
+        dfincludes['Pos'] = pd.to_numeric(dfincludes['Pos']) # Convert Pos to numeric
 
-        # Construct a df to store excludes and append to a list
-        excludes_noreasons = [x[1:2]+x[-2:-1] for x in excludes]
-        excludes_reasons = [x[2:-2] for x in excludes]
-        dfexcludes = pd.DataFrame(excludes_noreasons,columns = ['ATLS_SCORE','ASSOC_ID'])
-        dfexcludes['reasons'] = excludes_reasons       
-        dfexcludes['Date'] = date * dfexcludes.shape[0]
-        Excludes.append(dfexcludes)
+
+        transnums = []
+        # Get list of agents whose atlas score is applied
+        df_on = dfincludes[dfincludes.ATLS_APPLIED == 'true']
+        transnum = 1
+        for i in range(1, df_on.shape[0]):
+            print i
+            if df_on['Pos'].iloc[i] <= df_on['Pos'].iloc[i-1]:
+                transnum += 1        
+            transnums.append(transnum)
+
+        transnums =  [1] + transnums
+        df_on['Trans'] = transnums
+        df_on.groupby('Trans')['ATLS_SCORE'].agg('count')
+        df_on.groupby('Trans')['ATLS_SCORE'].agg(np.min)
+
+        #idx = df_on.groupby(['Trans'])['ATLS_SCORE'].transform(max) == df_on['Trans']
+        #df_MaxScoreAgent = df_on[idx]
+
+        df_MaxScoreAgent = df_on.sort('ATLS_SCORE',ascending = False).groupby('Trans',as_index = False).first()
+        df_TopAgent = df_on[df_on.Pos ==1]
+        
+        df_total = df_TopAgent.copy()
+        df_total.columns = ['TopPos','TopScore','TopAgent','ATLS_APPLIED','Date','Trans']
+        df_total['MaxSAgent'] = df_MaxScoreAgent.ASSOC_ID
+        df_total['MaxScore'] = df_MaxScoreAgent.ATLS_SCORE
+        df_total['MaxScorePos'] = df_MaxScoreAgent.Pos
+
+        TopMaxAgt.append(df_total)
+        
+        # Append the df into a list
+        #Includes.append(dfincludes)
+
+        # Construct a df to store excludes and append to a list, run into memory issue
+        # excludes_noreasons = [x[1:2]+x[-2:-1] for x in excludes]
+        # excludes_reasons = [x[2:-2] for x in excludes]
+        # dfexcludes = pd.DataFrame(excludes_noreasons,columns = ['ATLS_SCORE','ASSOC_ID'])
+        # dfexcludes['reasons'] = excludes_reasons       
+        # dfexcludes['Date'] = date * dfexcludes.shape[0]
+        # Excludes.append(dfexcludes)
 
         # Store the num trans, on and off in a list
         Num_trans.append(num_trans)
@@ -150,29 +157,13 @@ if __name__ == '__main__':
     AtlCount_df = pd.DataFrame(AtlCount_dict)
     AtlCount_df.to_csv('AtlCount201701.csv')
 
+    TopMaxAgt_df = pd.concat(TopMaxAgt)
+    TopMaxAgt_df.to_csv('TopMaxAgt201701.csv')
+
 
     # Construct includes and excludes concated pd and save to csv
-    Excludes_df = pd.concat(Excludes)
-    Includes_df = pd.concat(Includes)
-    Excludes_df.to_csv('Excludes201701.csv')
-    Includes_df.to_csv('Includes201701.csv')
+    #Excludes_df = pd.concat(Excludes)
+    #Includes_df = pd.concat(Includes)
+    #Excludes_df.to_csv('Excludes201701.csv')
+    #Includes_df.to_csv('Includes201701.csv')
 
-
-    # xml = 'listval_20170101_235902.xml'
-    # res,includes,excludes,num_trans,num_ats_on,num_ats_off = ParseAOI(xml)
-    # return res,includes,excludes,num_trans,num_ats_on,num_ats_off
-    #print 1,2,3
-
-    # includes,excludes = getAgentList('listval_20170101_235902.xml')
-    # # Index the list to show order of display
-    # includes_indexed = [[(x,y.index(x)) for x in y] for  y in includes]
-
-    # # Flatten the list
-    # includes_flattened = [item for sublist in includes_indexed for item in sublist]
-    # excludes_flattened = [item for sublist in excludes for item in sublist]
-
-    # # Show the most common 50 agents and their appearing order 
-    # Counter(includes_flattened).most_common(50)
-
-    # #<atlasScoreApplied>true
-    # #<officePosition>5</officePosition>
