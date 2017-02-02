@@ -70,12 +70,45 @@ def ParseAOI(xml):
 ## for each transaction the agent atlas score is on, record the actual top one agent,
 # the highest score agent, number of agent
 #Per zip code, # of AOI transactions where ATLAS== true, number of agents, actual ATLAS score per agent, actual conversion rate?
-def main():
-    #xml = 'listval_20170101_235902.xml'
-    # List all xml files
-    xmlFiles = glob.glob("/san-data/atlas_id/*xml")
+# def main():
+#     #xml = 'listval_20170101_235902.xml'
+#     # List all xml files
+#     # xmlFiles = glob.glob("/san-data/atlas_id/*xml")
+#     xmlFiles = glob.glob("*xml")
+#     Date = []
+#     Res = []
+#     Includes = []
+#     Excludes = []
+#     Num_trans = []
+#     Num_ats_on = []
+#     Num_ats_off = []
+
+
+#     # Parse xml files
+#     for xml in xmlFiles:
+#         date = xml.split('_')[1]
+#         res,includes,excludes,num_trans,num_ats_on,num_ats_off = ParseAOI(xml)
+#         Date.append(date)
+#         Res.append(res)
+#         Includes.append(includes)
+#         Excludes.append(excludes)
+#         Num_trans.append(num_trans)
+#         Num_ats_on.append(num_ats_on)
+#         Num_ats_off.append(num_ats_off)
+
+#     df_dict = {'Date':Date,'Num':Num_trans,'Num_ats_on':Num_ats_on,'Num_ats_off':Num_ats_off
+#     }
+
+#     df = pd.DataFrame(df_dict)
+#     df.to_csv('.csv')
+
+    #return res,includes,excludes,num_trans,num_ats_on,num_ats_off
+
+if __name__ == '__main__':
+    #main()
+    xmlFiles = glob.glob("*xml")
     Date = []
-    Res = []
+    #Res = []
     Includes = []
     Excludes = []
     Num_trans = []
@@ -85,26 +118,46 @@ def main():
 
     # Parse xml files
     for xml in xmlFiles:
-        date = xml.split('_')[1]
-        res,includes,excludes,num_trans,num_ats_on,num_ats_off = ParseAOI(xml)
-        Date.append(date)
-        Res.append(res)
-        Includes.append(includes)
-        Excludes.append(excludes)
+        date = xml.split('_')[1] # Get the date
+        res,includes,excludes,num_trans,num_ats_on,num_ats_off = ParseAOI(xml) # Pasre xml
+        Date.append(date) 
+        #Res.append(res)
+
+        # Construct a df to store includes
+        dfincludes = pd.DataFrame(includes,columns = ['Pos','ATLS_SCORE','ASSOC_ID','ATLS_APPLIED'])
+        # Include date column
+        dfincludes['Date'] = date * dfincludes.shape[0]
+        # Append the df into a list
+        Includes.append(dfincludes)
+
+        # Construct a df to store excludes and append to a list
+        excludes_noreasons = [x[1:2]+x[-2:-1] for x in excludes]
+        excludes_reasons = [x[2:-2] for x in excludes]
+        dfexcludes = pd.DataFrame(excludes_noreasons,columns = ['ATLS_SCORE','ASSOC_ID'])
+        dfexcludes['reasons'] = excludes_reasons       
+        dfexcludes['Date'] = date * dfexcludes.shape[0]
+        Excludes.append(dfexcludes)
+
+        # Store the num trans, on and off in a list
         Num_trans.append(num_trans)
         Num_ats_on.append(num_ats_on)
         Num_ats_off.append(num_ats_off)
 
-    df_dict = {'Date':Date,'Num':Num_trans,'Num_ats_on':Num_ats_on,'Num_ats_off':Num_ats_off
+
+    # Construct num_trans, on and off list into a df and save
+    AtlCount_dict = {'Date':Date,'Num':Num_trans,'Num_ats_on':Num_ats_on,'Num_ats_off':Num_ats_off
     }
+    AtlCount_df = pd.DataFrame(AtlCount_dict)
+    AtlCount_df.to_csv('AtlCount201701.csv')
 
-    df = pd.DataFrame(df_dict)
-    df.to_csv('testRes.csv')
 
-    #return res,includes,excludes,num_trans,num_ats_on,num_ats_off
+    # Construct includes and excludes concated pd and save to csv
+    Excludes_df = pd.concat(Excludes)
+    Includes_df = pd.concat(Includes)
+    Excludes_df.to_csv('Excludes201701.csv')
+    Includes_df.to_csv('Includes201701.csv')
 
-if __name__ == '__main__':
-    main()
+
     # xml = 'listval_20170101_235902.xml'
     # res,includes,excludes,num_trans,num_ats_on,num_ats_off = ParseAOI(xml)
     # return res,includes,excludes,num_trans,num_ats_on,num_ats_off
