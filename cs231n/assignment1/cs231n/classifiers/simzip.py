@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
+from scipy.spatial.distance import pdist, squareform
 
 zipdf = pd.read_csv('/san-data/usecase/agentpm/AgentProductionModel/zipmerged2010-2015.csv')
 zipdf_num = zipdf.iloc[:,3:] # remove zip code, city name, fips code for now
@@ -33,47 +34,60 @@ zipsimjoined = zipsim_df.set_index('ZIP').join(zipinfo.set_index('Postal Code'))
 del zipsimjoined['Unnamed: 7']
 del zipsimjoined['State']
 zipsimjoined.to_csv('zipsim_tsne_completedinfo',index = None)
+
+
+
+# COMPUTE DISTANCE MATRIX and save to a matrix csv
+sq_dist = squareform(pdist(np.array(zip(zipsimjoined.iloc[:,0],zipsimjoined.iloc[:,1]))))
+np.save('dist',sq_dist)
+
+# Load them back
+sq_dist = np.load('dist.npy')
+
+
+# Enter a place name and then return most similar place
+def getSimilar(place):
+	 idx = zipsim_df_agg[zipsim_df_agg['Place Name']==Place].index.tolist()[0]
+	 return zipsim_df_agg.ix[np.argsort(sq_dist[idx,])[:30]]['Place Name']
+
+
+# Find index of the target to be compared place, say i
+# then do np.argsort(sq_dist[i,]), use the element returned since the 2nd place 
+
+
 # Create functio to return most similar zip
 # Aggregate by city to validate that ny == chicago more than ny == bloomington,il
 # sth like this to verify that if we cluster them using kmeans, we found large cities clutered 
 # in one place and we color them by category: surburban, urban, rural areas
 
-# Visualize
-# plt.scatter(zipsim_df.iloc[:,0],zipsim_df.iloc[:,1])
-# # D is the city + zip code name
-# for i in xrange(D):
-# 	plt.annotate(s = index[i],xy = (tsned[i,0],tsned[i,1]))
-# plt.show()
-
-
-## Aggregated validation of simlarity
-#zipdfjoined = _num zipdfjoined.iloc[:,3:-4]
 
 ### AGG ANALYSIS ONLY THE FOLLOWING CODES
 
 # Read zipinfo csv which has the state, county info per zip
-zipdf = pd.read_csv('/san-data/usecase/agentpm/AgentProductionModel/zipmerged2010-2015.csv')
-zipinfo = pd.read_csv('/san-data/usecase/agentpm/AgentProductionModel/us_postal_codes.csv')
-# Join with zipdf
-zipdfjoined = zipdf.set_index('ZIP').join(zipinfo.set_index('Postal Code'))
-# Group by state and place name and agg by sum
-zipdfagged = zipdfjoined.groupby(['State','Place Name']).agg(np.sum)
-# Select useful columns 
-zipdfagged = zipdfagged.iloc[:,1:-3]
-# Reset index
-zipdfagged.reset_index(inplace = True)
-# Remove state and place name for now before pca and tsne
-zipdfagged_num = zipdfagged.iloc[:,2:]
+# zipdf = pd.read_csv('/san-data/usecase/agentpm/AgentProductionModel/zipmerged2010-2015.csv')
+# zipinfo = pd.read_csv('/san-data/usecase/agentpm/AgentProductionModel/us_postal_codes.csv')
+# # Join with zipdf
+# zipdfjoined = zipdf.set_index('ZIP').join(zipinfo.set_index('Postal Code'))
+# # Group by state and place name and agg by sum
+# zipdfagged = zipdfjoined.groupby(['State','Place Name']).agg(np.sum)
+# # Select useful columns 
+# zipdfagged = zipdfagged.iloc[:,1:-3]
+# # Reset index
+# zipdfagged.reset_index(inplace = True)
+# # Remove state and place name for now before pca and tsne
+# zipdfagged_num = zipdfagged.iloc[:,2:]
 
-pca = PCA(n_components= 50)
-pcaed = pca.fit_transform(zipdfagged_num)
+# pca = PCA(n_components= 50)
+# pcaed = pca.fit_transform(zipdfagged_num)
 
-# Use TSNE to reduce to 2 dimnesions
-tsne = TSNE(n_components=2,random_state = 0)
-tsned = tsne.fit_transform(pcaed)
-tsnedf_agg = pd.DataFrame(tsned,columns  = ['x','y'],index = None)
-zipsim_df_agg= pd.concat((tsnedf_agg,zipdfagged.iloc[:,:2]),axis = 1)
-zipsim_df_agg =  pd.concat((zipsim_df_agg,zipdfagged['CURRENT_POP.2015']),axis = 1)
-zipsim_df_agg.to_csv('zipsimtsne_agged.csv',index = None)
+# # Use TSNE to reduce to 2 dimnesions
+# tsne = TSNE(n_components=2,random_state = 0)
+# tsned = tsne.fit_transform(pcaed)
+# tsnedf_agg = pd.DataFrame(tsned,columns  = ['x','y'],index = None)
+# zipsim_df_agg= pd.concat((tsnedf_agg,zipdfagged.iloc[:,:2]),axis = 1)
+# zipsim_df_agg =  pd.concat((zipsim_df_agg,zipdfagged['CURRENT_POP.2015']),axis = 1)
+# zipsim_df_agg.to_csv('zipsimtsne_agged.csv',index = None)
 
-zipsim_df_agg['size'] = ['City' if x >25000 else 'Rural' if x < 50000 else 'Surb' for x in zipsim_df_agg['CURRENT_POP.2015']]
+# zipsim_df_agg['size'] = ['City' if x >25000 else 'Rural' if x < 50000 else 'Surb' for x in zipsim_df_agg['CURRENT_POP.2015']]
+# sq_dist_agged = squareform(pdist(np.array(zip(zipsim_df_agg.iloc[:,0],zipsim_df_agg.iloc[:,1]))))
+# pd.DataFrame(sq_dist_agged,index = None).to_csv('zip_dist_agged.csv')
