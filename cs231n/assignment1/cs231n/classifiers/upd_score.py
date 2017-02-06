@@ -21,7 +21,8 @@ if __name__ == '__main__':
 
         df_on = pd.read_csv(csv)
         df_on['ASSOC_ID'] =  df_on['ASSOC_ID'].astype(str)
-
+        # Need to map first with /san-data/atlas_id/logs/agent_select_score_log_file.txt
+        # agent associate id mapping with office associate id
         #novScore[novScore.ASSOC_ID == '003BC472000']
         #df_on[df_on.ASSOC_ID == 'MF3SD6XS3AL']
         #df_on.ASSOC_ID.isin(novScore.ASSOC_ID)

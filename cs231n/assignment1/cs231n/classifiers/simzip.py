@@ -26,12 +26,13 @@ zipsim_df.to_csv('zipsimilarity_tsne.csv',index = None)
 # save tsned file to a csv, it takes long to run the tsne
 
 
-## TO-DO:
+## Join with other info like state, county, coordinate to search for closest similar state
 zipsim_df = pd.read_csv('/san-data/usecase/agentpm/AgentProductionModel/zipsimilarity_tsne.csv')
 zipinfo = pd.read_csv('/san-data/usecase/agentpm/AgentProductionModel/us_postal_codes.csv')
 zipsimjoined = zipsim_df.set_index('ZIP').join(zipinfo.set_index('Postal Code'))
 del zipsimjoined['Unnamed: 7']
 del zipsimjoined['State']
+zipsimjoined.to_csv('zipsim_tsne_completedinfo',index = None)
 # Create functio to return most similar zip
 # Aggregate by city to validate that ny == chicago more than ny == bloomington,il
 # sth like this to verify that if we cluster them using kmeans, we found large cities clutered 
@@ -48,7 +49,10 @@ del zipsimjoined['State']
 ## Aggregated validation of simlarity
 #zipdfjoined = _num zipdfjoined.iloc[:,3:-4]
 
+### AGG ANALYSIS ONLY THE FOLLOWING CODES
+
 # Read zipinfo csv which has the state, county info per zip
+zipdf = pd.read_csv('/san-data/usecase/agentpm/AgentProductionModel/zipmerged2010-2015.csv')
 zipinfo = pd.read_csv('/san-data/usecase/agentpm/AgentProductionModel/us_postal_codes.csv')
 # Join with zipdf
 zipdfjoined = zipdf.set_index('ZIP').join(zipinfo.set_index('Postal Code'))
@@ -67,4 +71,9 @@ pcaed = pca.fit_transform(zipdfagged_num)
 # Use TSNE to reduce to 2 dimnesions
 tsne = TSNE(n_components=2,random_state = 0)
 tsned = tsne.fit_transform(pcaed)
+tsnedf_agg = pd.DataFrame(tsned,columns  = ['x','y'],index = None)
+zipsim_df_agg= pd.concat((tsnedf_agg,zipdfagged.iloc[:,:2]),axis = 1)
+zipsim_df_agg =  pd.concat((zipsim_df_agg,zipdfagged['CURRENT_POP.2015']),axis = 1)
+zipsim_df_agg.to_csv('zipsimtsne_agged.csv',index = None)
 
+zipsim_df_agg['size'] = ['City' if x >25000 else 'Rural' if x < 50000 else 'Surb' for x in zipsim_df_agg['CURRENT_POP.2015']]
