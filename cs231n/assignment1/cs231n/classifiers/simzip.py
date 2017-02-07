@@ -1,3 +1,14 @@
+########
+## Work directory in /san-data/usecase/agentpm/AgentProductionModel
+## Script to return a 2-d encoded zip matrix using pca and tsne: zipsim_tsne_completedinfo
+## and a dist matrix desribing pair-wise dist of 40339 x 40339 dim: dist.npy
+
+
+## Also produces these two files for valiation purposes:
+## zipsimtsne_agged.csv which is a place aggregated version 2-d encoded matrix
+## and dist_agg.npy
+########
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -40,16 +51,6 @@ zipsimjoined.to_csv('zipsim_tsne_completedinfo',index = None)
 # COMPUTE DISTANCE MATRIX and save to a matrix csv
 sq_dist = squareform(pdist(np.array(zip(zipsimjoined.iloc[:,0],zipsimjoined.iloc[:,1]))))
 np.save('dist',sq_dist)
-
-# Load them back
-sq_dist = np.load('dist.npy')
-
-
-# Enter a place name and then return most similar place
-def getSimilar(place):
-	 idx = zipsim_df_agg[zipsim_df_agg['Place Name']==Place].index.tolist()[0]
-	 return zipsim_df_agg.ix[np.argsort(sq_dist[idx,])[:30]]['Place Name']
-
 
 # Find index of the target to be compared place, say i
 # then do np.argsort(sq_dist[i,]), use the element returned since the 2nd place 
