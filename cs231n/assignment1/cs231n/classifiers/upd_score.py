@@ -61,4 +61,17 @@ if __name__ == '__main__':
 
 
 
+    ####
+    # Update random factor part
+    ####
+score = [0.15,0.1,0.1,0.25,0.8,0.2]
+# fairness factor == 2
+score_trans = [pow(x,0.5) for x in score]
+sum_transcore = sum(score_trans)
+score_trans_normed = [x/sum_transcore for x in score_trans]
+
+
+
+
+
         
