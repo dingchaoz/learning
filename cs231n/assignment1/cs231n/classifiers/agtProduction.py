@@ -35,27 +35,12 @@ agtSumDF.to_csv('auto_sum_stagt_nadropped.csv',index = False)
 agtSumDFWide = pd.read_csv('auto_sum_stagt_nadropped_wide.csv')
 
 
-# from statsmodels.stats.outliers_influence import variance_inflation_factor
-# def calculate_vif_(X):
-# thresh = 5.0
-# variables = range(X.shape[1])
-# dropped=True
-# while (dropped==True):
-#     dropped=False
-#     vif = [variance_inflation_factor(X[variables].values, ix) for ix in range(X[variables].shape[1])]
-
-#     maxloc = vif.index(max(vif))
-#     if max(vif) > thresh:
-#         print('dropping \'' + X[variables].columns[maxloc] + '\' at index: ' + str(maxloc))
-#         del variables[maxloc]
-#         dropped=True
-
-# print('Remaining variables:')
-# print(X.columns[variables])
-# return X[variables]
+# http://machinelearningmastery.com/feature-selection-machine-learning-python/
 
 
-# from statsmodels.stats.outliers_influence import variance_inflation_factor
+### The following vif method takes hours to finish!
+#http://stats.stackexchange.com/questions/155028/how-to-systematically-remove-collinear-variables-in-python
+from statsmodels.stats.outliers_influence import variance_inflation_factor
 
 def calculate_vif_(X):
 
@@ -74,3 +59,15 @@ def calculate_vif_(X):
     print 'Remaining variables:'
     print X.columns[variables]
     return X
+
+
+
+X = agtSumDFWide.dropna()
+X.dtypes.value_counts()
+X.dtypes[X.dtypes == 'object']
+del X['AGENT.2011']
+del X['AGENT.2012']
+del X['AGENT.2013']
+del X['AGENT.2014']
+del X['AGENT.2015']
+calculate_vif_(X)
