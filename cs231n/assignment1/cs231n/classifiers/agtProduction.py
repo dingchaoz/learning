@@ -22,3 +22,55 @@ agtSumDF.to_csv('auto_sum_stagt.csv',index = False)
 agtSumDF.dropna(how = 'any',axis = 1, inplace = True)
 # Save NA dropped file
 agtSumDF.to_csv('auto_sum_stagt_nadropped.csv',index = False)
+
+
+# ## The following is R code, converting from long to wide shape
+# df <- read.csv('/san-data/usecase/agentpm/AgentProductionModel/auto_sum_stagt_nadropped.csv')
+# dfAutoWide <- reshape(df, timevar = "YEAR",
+#                       idvar = "STCODE",
+#                       v.names = names(df)[3:83],
+#                       direction = "wide")
+# write.csv(dfAutoWide,file = '/san-data/usecase/agentpm/AgentProductionModel/auto_sum_stagt_nadropped_wide.csv',row.names=FALSE)
+
+agtSumDFWide = pd.read_csv('auto_sum_stagt_nadropped_wide.csv')
+
+
+# from statsmodels.stats.outliers_influence import variance_inflation_factor
+# def calculate_vif_(X):
+# thresh = 5.0
+# variables = range(X.shape[1])
+# dropped=True
+# while (dropped==True):
+#     dropped=False
+#     vif = [variance_inflation_factor(X[variables].values, ix) for ix in range(X[variables].shape[1])]
+
+#     maxloc = vif.index(max(vif))
+#     if max(vif) > thresh:
+#         print('dropping \'' + X[variables].columns[maxloc] + '\' at index: ' + str(maxloc))
+#         del variables[maxloc]
+#         dropped=True
+
+# print('Remaining variables:')
+# print(X.columns[variables])
+# return X[variables]
+
+
+# from statsmodels.stats.outliers_influence import variance_inflation_factor
+
+def calculate_vif_(X):
+
+    '''X - pandas dataframe'''
+    thresh = 5.0
+    variables = range(X.shape[1])
+
+    for i in np.arange(0, len(variables)):
+        vif = [variance_inflation_factor(X[variables].values, ix) for ix in range(X[variables].shape[1])]
+        print(vif)
+        maxloc = vif.index(max(vif))
+        if max(vif) > thresh:
+            print('dropping \'' + X[variables].columns[maxloc] + '\' at index: ' + str(maxloc))
+            del variables[maxloc]
+
+    print 'Remaining variables:'
+    print X.columns[variables]
+    return X
