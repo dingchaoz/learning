@@ -54,7 +54,7 @@ def takeInput(argv):
       else:
          print 'invalid input'
 
-   print 'Target is ', target
+   print 'Run SPC for this time: ', target
    return target
 
 def getLatestDF():
@@ -62,17 +62,30 @@ def getLatestDF():
 	df_final = pd.read_csv('ts_actual_forecast_20161-11.csv')
 	return df_final
 
-def getPrediction(target):
 
-	targetF = target + '_time_series_scores.csv'
-	try:
-		tPrediction = pd.read_csv(targetF)
-	except:
-		print 'error'
+def validateTarget(latestDF,target):
 
-	tPrediction = tPrediction[tPrediction.CSE_RSLT_IND == 1][['ASSOC_ID','score']]
+	lastMonth = list(latestDF.filter(regex = 'ERR_').columns)[-1].split('_')[1]
+	plastM = parse(lastMonth[:4]+'/' + lastMonth[4:])
+	ptargetM = parse(target[:4]+'/' + target[4:])
 
-	return tPrediction
+	if ptargetM < plastM:
+		#print 'Choose a target month later than: ', plastM
+		sys.exit('Choose a target month later than 201611 at least' )
+
+# def getPrediction(target):
+
+# 	targetF = target + '_time_series_scores.csv'
+
+# 	try:
+# 		tPrediction_ = pd.read_csv(targetF)
+# 		tPrediction_ = tPrediction_[tPrediction_.CSE_RSLT_IND == 1][['ASSOC_ID','score']]
+# 	except:
+# 		print 'error'
+
+# 	#tPrediction_ = tPrediction_[tPrediction_.CSE_RSLT_IND == 1][['ASSOC_ID','score']]
+
+# 	return tPrediction_
 
 def getActual(target):
 
@@ -80,20 +93,35 @@ def getActual(target):
 	try:
 		atlas = pd.read_csv('../csv/atlas_time_series.csv')
 		atlas_t = atlas[atlas.QUOT_MONTH_new == targetDate][['ASSOC_ID','CONV_RATE']]
-	except:
-		print 'error'
+	except Exception as e:
+		print str(e)
 
 	return targetDate,atlas,atlas_t
 
+def getTargetDF(target,atlas_t):
 
-def getTargetDF(tPrediction,atlas_t):
+	targetF = target + '_time_series_scores.csv'
+	if os.path.isfile(targetF) == False:
+		sys.exit('There is no targeted score file generated yet, please contact model developer')
 
-
-	targetDF = tPrediction.merge(atlas_t,on='ASSOC_ID')
+	tPrediction_ = pd.read_csv(targetF)
+	tPrediction_ = tPrediction_[tPrediction_.CSE_RSLT_IND == 1][['ASSOC_ID','score']]
+	targetDF = tPrediction_.merge(atlas_t,on='ASSOC_ID')
 	targetDF['ERR'] = targetDF.CONV_RATE - targetDF.score
 	targetDF.columns = ['ASSOC_ID','SCORE_'+target,'CONV_RATE_'+target,'ERR_'+target]
 
 	return targetDF
+
+
+
+# def getTargetDF(tPrediction,atlas_t):
+
+
+# 	targetDF = tPrediction.merge(atlas_t,on='ASSOC_ID')
+# 	targetDF['ERR'] = targetDF.CONV_RATE - targetDF.score
+# 	targetDF.columns = ['ASSOC_ID','SCORE_'+target,'CONV_RATE_'+target,'ERR_'+target]
+
+# 	return targetDF
 
 
 def threshFilter(targetDate,atlas):
@@ -170,28 +198,29 @@ def spotOutlier(dinfo):
 		if (value[1][0] - value[0][-1] == 1) and (value[1][0] == 10) :
 			outlier2cont[key] = value
 
+
+	print 'There are %i outliers' %(len(outlier2cont))
+
 	return outlier2cont
 
 
 def main(argv):
-	#target = '201611'
+
+
 	os.chdir('/san-data/usecase/atlasid/new_data/output_file/')
 	target = takeInput(argv)
 	latestDF = getLatestDF()
-	tPrediction = getPrediction(target)
+	validateTarget(latestDF,target)
+	#tPrediction = getPrediction(target)
 	targetDate,atlas,atlas_t = getActual(target)
-	targetDF = getTargetDF(tPrediction,atlas_t)
+	#targetDF = getTargetDF(tPrediction,atlas_t)
+	targetDF = getTargetDF(target,atlas_t)
 	thresh = threshFilter(targetDate,atlas)
 	newlatestDF = newLatestDF(latestDF,targetDF,thresh)
 	dlist = runSPC(newlatestDF)
 	dinfo = saveDlist(dlist,target)
 	outlier2cont = spotOutlier(dinfo)
 
-# def main(argv):
-
-#    target = takeInput(argv)
-   
-#    os.chdir('/san-data/usecase/atlasid/new_data/output_file/')
 
 if __name__ == "__main__":
    main(sys.argv[1:])
