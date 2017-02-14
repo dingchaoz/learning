@@ -225,7 +225,11 @@ def main(argv):
 if __name__ == "__main__":
    main(sys.argv[1:])
 
-
+#TO-DO:
+# validate target date in the beginginig before loading any file
+# add try, except and logging
+# add func if date is already ran, refer ppl to an existing file where records all months outliers
+# add lines to save newupdated latest df
 
 # jan = pd.read_csv('/san-data/usecase/atlasid/new_data/output_file/jan_time_series_scores.csv')
 # feb = pd.read_csv('/san-data/usecase/atlasid/new_data/output_file/feb_time_series_scores.csv')
