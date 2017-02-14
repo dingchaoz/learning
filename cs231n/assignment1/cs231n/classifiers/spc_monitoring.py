@@ -13,65 +13,103 @@ from spc import *
 pd.options.display.max_columns = 100
 pd.options.display.max_rows = 500
 
+def getLatestDF():
+	# Read current pd file
+	df_final = pd.read_csv('ts_actual_forecast_20161-11.csv')
+	return df_final
 
-os.chdir('/san-data/usecase/atlasid/new_data/output_file/')
-# Read current pd file
-df_final = pd.read_csv('ts_actual_forecast_20161-11.csv')
+def getPrediction(target):
 
-#Read a latest time series prediction file
-nov = pd.read_csv('nov_time_series_scores.csv')
-nov = nov[nov.CSE_RSLT_IND == 1][['ASSOC_ID','score']]
+	targetF = target + '_time_series_scores.csv'
+	try:
+		tPrediction = pd.read_csv(targetF)
+	except:
+		print 'error'
 
+	tPrediction = tPrediction[tPrediction.CSE_RSLT_IND == 1][['ASSOC_ID','score']]
 
-#Read actual conversion rate concatenated atlas file
-atlas = pd.read_csv('../csv/atlas_time_series.csv')
-atlas_nov = atlas[atlas.QUOT_MONTH_new == '2016-11-01'][['ASSOC_ID','CONV_RATE']]
+	return tPrediction
 
-# Merge latest score and actual conv rate
-nov_merged = nov.merge(atlas_nov,on ='ASSOC_ID')
-# Compute residual of forecast
-nov_merged['ERR'] = nov_merged.CONV_RATE - nov_merged.score
-# Update names of the columns
+def getActual(target):
 
-# Get last 4 month data only preparing compute thresh
-last4M = atlas[atlas['QUOT_MONTH_new'] <= '2016-11-01']
-# Apply filter of 40 counts or not
-thresh = last4M.groupby('ASSOC_ID')['QUOT_CNT'].agg(np.sum) >= 40
-# Reset index
-thresh = thresh.reset_index()
-# Filter out not meeting quote counts agent
-thresh = thresh[thresh.QUOT_CNT == True]
-# Delete true or false col
-del thresh['QUOT_CNT']
+	targetDate = target[:4]+'-'+target[4:]+'-01'
+	try:
+		atlas = pd.read_csv('../csv/atlas_time_series.csv')
+		atlas_t = atlas[atlas.QUOT_MONTH_new == targetDate][['ASSOC_ID','CONV_RATE']]
+	except:
+		print 'error'
+
+	return targetDate,atlas,atlas_t
 
 
-# Merge into the final data frame
-df_final = df_final.merge(nov_merged, on= 'ASSOC_ID')
-# Merge with threshed agents
-df_final = df_final.merge(thresh, on= 'ASSOC_ID', how = 'inner')
+def getTargetDF(tPrediction,atlas_t):
+
+
+	targetDF = tPrediction.merge(atlas_t,on='ASSOC_ID')
+	targetDF['ERR'] = targetDF.CONV_RATE - targetDF.score
+	targetDF.columns = ['ASSOC_ID','SCORE_'+target,'CONV_RATE_'+target,'ERR_'+target]
+
+	return targetDF
+
+
+def threshFilter(targetDate,atlas):
+
+	# Get last 4 month data only preparing compute thresh
+	last4M = atlas[atlas['QUOT_MONTH_new'] <= targetDate]
+	# Apply filter of 40 counts or not
+	thresh = last4M.groupby('ASSOC_ID')['QUOT_CNT'].agg(np.sum) >= 40
+	# Reset index
+	thresh = thresh.reset_index()
+	# Filter out not meeting quote counts agent
+	thresh = thresh[thresh.QUOT_CNT == True]
+	# Delete true or false col
+	del thresh['QUOT_CNT']
+
+	return thresh
+
+def newLatestDF(latestDF,targetDF,thresh):
+	newlatestDF = latestDF.merge(targetDF,on ='ASSOC_ID')
+	newlatestDF = newlatestDF.merge(thresh,on= 'ASSOC_ID', how = 'inner')
+
+	return newlatestDF
+
+
+def runSPC(newlatestDF):
+
+	## SPC running
+	ERRS = newlatestDF.filter(regex = 'ERR_')
+	dlist = []
+
+	for i in range(0,ERRS.shape[0]):
+	    x = ERRS.iloc[i,:].tolist()
+	    cc = Spc(x, CHART_X_MR_X)
+	    if len(cc._find_violating_points()) > 0:
+	        d = {}
+	        d[newlatestDF.iloc[i,0]] = cc._find_violating_points()
+	        dlist.append(d)
+	#     cc.get_chart()
+	#     plt.title(df_final2.iloc[i,0] + ' forecast error control chart')
+	#     plt.annotate(cc._find_violating_points(), xy=(0.05, 0.85), xycoords='axes fraction')
+	#     plt.xticks(range(0,10),labels,rotation = 'horizontal')
+	#     pp.savefig(fig)
+	#     plt.close(fig)
+	    
+	#pp.close()
+	#print dlist
+
+	return dlist
 
 
 
-## SPC running
-ERRS = df_final.filter(regex = 'ERR_')
-dlist = []
+target = '201611'
+latestDF = getLatestDF()
+tPrediction = getPrediction(target)
+targetDate,atlas,atlas_t = getActual(target)
+targetDF = getTargetDF(tPrediction,atlas_t)
+thresh = threshFilter(targetDate,atlas)
+newlatestDF = newLatestDF(latestDF,targetDF,thresh)
+dlist = runSPC(newlatestDF)
 
-for i in range(0,ERRS.shape[0]):
-    x = ERRS.iloc[i,:].tolist()
-    cc = Spc(x, CHART_X_MR_X)
-    if len(cc._find_violating_points()) > 0:
-        d = {}
-        d[df_final.iloc[i,0]] = cc._find_violating_points()
-        dlist.append(d)
-#     cc.get_chart()
-#     plt.title(df_final2.iloc[i,0] + ' forecast error control chart')
-#     plt.annotate(cc._find_violating_points(), xy=(0.05, 0.85), xycoords='axes fraction')
-#     plt.xticks(range(0,10),labels,rotation = 'horizontal')
-#     pp.savefig(fig)
-#     plt.close(fig)
-    
-#pp.close()
-#print dlist
 
 
 with open('/san-data/usecase/atlasid/new_data/output_file/spcRun', 'w') as fout:
