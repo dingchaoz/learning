@@ -10,8 +10,52 @@ import matplotlib.pyplot as plt
 import json
 from sklearn import metrics
 from spc import *
-pd.options.display.max_columns = 100
-pd.options.display.max_rows = 500
+import sys, getopt
+import datetime
+from dateutil.parser import parse
+from datetime import timedelta
+
+
+def setTarget(arg = None):
+   if arg == None:
+      today = datetime.date.today()
+   else:
+      today = datetime.date(int(arg[:4]),int(arg[4:]),1)
+   delta = timedelta(days = 31)
+   target = today + delta
+
+   return str(target.year) + str(target.month)
+
+
+def validate(date_text):
+    try:
+        datetime.datetime.strptime(date_text, '%Y%m')
+    except ValueError:
+        raise ValueError("Incorrect data format, should be YYYYMM")
+
+
+def takeInput(argv):
+
+   target = setTarget()
+   
+   try:
+      opts, args = getopt.getopt(argv,"t:",["target="])
+   except getopt.GetoptError:
+      print 'spc_monitoring.py -t <yyyymm>'
+      sys.exit(2)
+   for opt, arg in opts:
+      if opt == '-h':
+         print 'spc_monitoring.py -t <yyyymm>'
+         sys.exit()
+      elif opt in ("-t", "--target"):
+         validate(arg)
+         target = setTarget(arg)
+         # print parse(arg)
+      else:
+         print 'invalid input'
+
+   print 'Target is ', target
+   return target
 
 def getLatestDF():
 	# Read current pd file
@@ -100,36 +144,57 @@ def runSPC(newlatestDF):
 	return dlist
 
 
+def saveDlist(dlist,target):
 
-target = '201611'
-latestDF = getLatestDF()
-tPrediction = getPrediction(target)
-targetDate,atlas,atlas_t = getActual(target)
-targetDF = getTargetDF(tPrediction,atlas_t)
-thresh = threshFilter(targetDate,atlas)
-newlatestDF = newLatestDF(latestDF,targetDF,thresh)
-dlist = runSPC(newlatestDF)
+	saveFile = 'spcRun_' + target
+	with open(saveFile, 'w') as fout:
+		json.dump(dlist, fout)
 
+	outlierInfo = []
+	with open(saveFile) as f:
+		for line in f:
+			outlierInfo.append(json.loads(line))
 
-
-with open('/san-data/usecase/atlasid/new_data/output_file/spcRun', 'w') as fout:
-    json.dump(dlist, fout)
-
-outlierInfo = []
-with open('/san-data/usecase/atlasid/new_data/output_file/spcRun') as f:
-    for line in f:
-        outlierInfo.append(json.loads(line))
+	return outlierInfo
 
 
-outlier2_3M = {}
-for i in outlierInfo[0]:
-    if (len(i.values()[0].values()) >=2):
-        outlier2_3M[i.keys()[0]] = (i.values()[0].values())
- 
-outlier2cont = {}       
-for key, value in outlier2_3M.iteritems():
-	if (value[1][0] - value[0][-1] == 1) and (value[1][0] == 10) :
-		outlier2cont[key] = value
+def spotOutlier(dinfo):
+
+	outlier2_3M = {}
+	for i in dinfo[0]:
+	    if (len(i.values()[0].values()) >=2):
+	        outlier2_3M[i.keys()[0]] = (i.values()[0].values())
+	 
+	outlier2cont = {}       
+	for key, value in outlier2_3M.iteritems():
+		if (value[1][0] - value[0][-1] == 1) and (value[1][0] == 10) :
+			outlier2cont[key] = value
+
+	return outlier2cont
+
+
+def main(argv):
+	#target = '201611'
+	os.chdir('/san-data/usecase/atlasid/new_data/output_file/')
+	target = takeInput(argv)
+	latestDF = getLatestDF()
+	tPrediction = getPrediction(target)
+	targetDate,atlas,atlas_t = getActual(target)
+	targetDF = getTargetDF(tPrediction,atlas_t)
+	thresh = threshFilter(targetDate,atlas)
+	newlatestDF = newLatestDF(latestDF,targetDF,thresh)
+	dlist = runSPC(newlatestDF)
+	dinfo = saveDlist(dlist,target)
+	outlier2cont = spotOutlier(dinfo)
+
+# def main(argv):
+
+#    target = takeInput(argv)
+   
+#    os.chdir('/san-data/usecase/atlasid/new_data/output_file/')
+
+if __name__ == "__main__":
+   main(sys.argv[1:])
 
 
 
