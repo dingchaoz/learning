@@ -15,6 +15,10 @@ import datetime
 from dateutil.parser import parse
 from datetime import timedelta
 
+# usage:
+# python spc_monitoring.py -t 201610
+# Run SPC for this time:  201611
+
 
 def setTarget(arg = None):
    if arg == None:
@@ -183,10 +187,12 @@ def saveDlist(dlist,target):
 		for line in f:
 			outlierInfo.append(json.loads(line))
 
+	os.remove(saveFile)
+
 	return outlierInfo
 
 
-def spotOutlier(dinfo):
+def spotOutlier(dinfo,target):
 
 	outlier2_3M = {}
 	for i in dinfo[0]:
@@ -201,13 +207,17 @@ def spotOutlier(dinfo):
 
 	print 'There are %i outliers' %(len(outlier2cont))
 
+	saveFile = 'outlier_' + target
+	with open(saveFile, 'w') as fout:
+		json.dump(outlier2cont, fout)
+
 	return outlier2cont
 
 
 def main(argv):
 
 
-	os.chdir('/san-data/usecase/atlasid/new_data/output_file/')
+	os.chdir('/san-data/usecase/atlasid/output_file/')
 	target = takeInput(argv)
 	latestDF = getLatestDF()
 	validateTarget(latestDF,target)
@@ -219,7 +229,7 @@ def main(argv):
 	newlatestDF = newLatestDF(latestDF,targetDF,thresh)
 	dlist = runSPC(newlatestDF)
 	dinfo = saveDlist(dlist,target)
-	outlier2cont = spotOutlier(dinfo)
+	outlier2cont = spotOutlier(dinfo,target)
 
 
 if __name__ == "__main__":
