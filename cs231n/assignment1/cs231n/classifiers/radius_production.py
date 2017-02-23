@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 # utm is installed by running python setup.py install in the directory at ejlq@da74wbedge1 [/home/ejlq/utm-0.4.1]
 import utm
+import collections
 import matplotlib.pyplot as plt
 from scipy.spatial.distance import pdist, squareform
 
@@ -99,3 +100,43 @@ DFMergedAgtPols['dist'] = DFMergedAgtPols[['utm_agent','utm_pol']].apply(getDist
     #DFMergedAgtPols['DATE_AGENT_ASSIGN_DATE'].fillna(method = 'backfill',inplace = True)
 DFMergedAgtPols['POL_YR'] = DFMergedAgtPols.DATE_EFFECTIVE_DATE.apply(getYear)
 DFMergedAgtPols['POL_ZIP'] = DFMergedAgtPols.LOC_ZIP.apply(getF5Zip)
+
+
+# groupedSTAGT = DFMergedAgtPols.groupby('ST_AGT_CD')
+# Get a list of all st agt code
+allAgts = set(DFMergedAgtPols.ST_AGT_CD)
+
+dfRes = pd.DataFrame()
+
+for agt in allAgts:
+	# Get that agent's pol data into a df
+	dfAgt = DFMergedAgtPols[DFMergedAgtPols['ST_AGT_CD'] == agt]
+	print 'Extract data from agent ', agt
+	# Sort the dfAgt by the pol distance to office
+	dfAgt.sort('dist',inplace = True)
+	print 'Dist sorted from agent', agt
+	# Get the 80% number of pols for the agent
+	numPols = int(round(dfAgt.shape[0]*0.8))
+	# Counter count the zips that has 80% of the pols
+	c = collections.Counter(dfAgt.POL_ZIP[:numPols])
+	# Get the top 10 zips that has the most number of pols
+	top10Zips = c.most_common(10)
+	print 'Top 10 zips produced for agent', agt
+	# Initiate array to hold the result data which has st_agt_cd,home_zip and top 10 zips that have most pols
+	res = [agt,dfAgt.ZIP_CD.iloc[0]]
+	res.append([x[0] for x in top10Zips])
+	res = [res]
+	dfRes.append(res)
+	print 'Res produced for agent', agt
+
+
+
+#One example: 
+# agt011032 = DFMergedAgtPols[DFMergedAgtPols['ST_AGT_CD'] == '011032']
+# agt011032.sort('dist',inplace = True)
+# set(agt011032.POL_ZIP)
+i = agt011032.shape[0]
+import collections
+c = collections.Counter(agt011032.POL_ZIP[:int(i)])
+x = c.most_common(10)
+a = [[x1[0] for x1 in x]]
