@@ -111,7 +111,7 @@ from scipy.spatial.distance import pdist, squareform
 ### DFMergedAgtPols were saved into this file: /san-data/usecase/agentpm/AgentProductionModel/agtspols_processed.csv
 os.chdir('/san-data/usecase/agentpm/AgentProductionModel/')
 DFMergedAgtPols = pd.read_csv('agtspols_processed.csv')
-store = HDFStore('store.h5')
+
 # Get a list of all st agt code
 allAgts = set(DFMergedAgtPols.ST_AGT_CD)
 
@@ -141,6 +141,7 @@ for agt in list(allAgts):
 	i += 1
 	if i % 100 == 0:
 		dfRes.to_pickle('radiusZips')
+	print 'pick dumped ', i
 
 dfRes.to_pickle('radiusZips')
 #dfRes = pd.read_pickle(file_name)

@@ -63,7 +63,7 @@ def takeInput(argv):
 
 def getLatestDF():
 	# Read current pd file
-	df_final = pd.read_csv('ts_actual_forecast_20161-11.csv')
+	df_final = pd.read_csv('../ts_actual_forecast_20161-11.csv')
 	return df_final
 
 
