@@ -8,3 +8,16 @@ grpby_stagt_dates2.csv has all the numeric columns grouped by geo_state,agent co
 the hive query is grpbyAgtStDates in my saved queries in hive, this file is huge and may take forever to load,maybe
 need to query the file year by year, aggregate each years' data to each agent, then concate all 5 years data, when
 renewing the model, just need to repeat the concate with the latest new year data.
+
+
+
+
+#### Radis analysis data pull
+2 raw files, 1st is '/san-data/usecase/agentpm/AgentProductionModel/agents_and_policies_auto.csv'
+which is produced using agt_and_policies in my saved queries in hive
+2nd file is '/san-data/usecase/agentpm/AgentProductionModel/Agents_Sep_2016.csv' which is agent loc info
+
+These 2 files were merged and new columns about the distance between home office to each pol loca calcualted
+and is saved into this file:/san-data/usecase/agentpm/AgentProductionModel/agtspols_processed.csv
+
+
