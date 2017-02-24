@@ -51,7 +51,8 @@ dfResExpanded.drop(dfResExpanded.index[canadaIndex],inplace = True)
 
 # Read the latest available demographics data, the columns actuall have up to previous 8 years of pol related data,
 # so no need to use previous demogrphics zip data
-dfDem = pd.read_csv('/san-data/usecase/agentpm/Demographics/zpmerge_2015.csv')
+# Change the num_year of the file to produce different years of zip features
+dfDem = pd.read_csv('/san-data/usecase/agentpm/Demographics/zpmerge_2010.csv')
 # Remove all ethnic columns
 dfDem.drop(dfDem.filter(regex = 'ETHNIC').columns,axis = 1,inplace = True)
 
@@ -61,7 +62,7 @@ dfDem.drop(dfDem.filter(regex = 'ETHNIC').columns,axis = 1,inplace = True)
 
 # zip_0 to zip_9 are all strings so convert the following cols to str too before merging
 dfDem['ZIP'] = dfDem.ZIP.astype(str)
-dfResExpanded['HOMEZIP'] = dfResExpanded['HOMEZIP'].astype(str)
+#dfResExpanded['HOMEZIP'] = dfResExpanded['HOMEZIP'].astype(str)
 
 ##Merge on the zips
 homezipMerged = dfResExpanded.merge(dfDem,left_on = 'HOMEZIP',right_on = 'ZIP',how = 'left')
@@ -103,5 +104,5 @@ zip9Merged.columns = ['zip9_'+ x for x in zip9Merged.columns]
 dfZipFeatures = pd.concat([homezipMerged,zip0Merged,zip1Merged,zip2Merged,zip3Merged,zip4Merged,zip5Merged,zip6Merged,zip7Merged,zip8Merged,zip9Merged],axis = 1)
 
 
-dfZipFeatures.to_csv('top10ZipFeatures.csv',index = None)
-dfZipFeatures.to_pickle('top10ZipFeatures')
+dfZipFeatures.to_csv('top10ZipFeatures_2010.csv',index = None)
+dfZipFeatures.to_pickle('top10ZipFeatures_2010')
