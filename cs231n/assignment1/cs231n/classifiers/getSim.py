@@ -12,7 +12,7 @@ import glob
 from scipy.spatial.distance import pdist, squareform
 
 # Set up working directory
-os.chdir('/san-data/usecase/agentpm/AgentProductionModel')
+os.chdir('/san-data/usecase/agentpm/AgentProductionModel/zipSimilarity')
 # Load zip distance pair-wise matrix
 sq_dist = np.load('dist.npy')
 # Load zip 2d encoded matrix
