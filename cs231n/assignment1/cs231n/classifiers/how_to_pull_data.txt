@@ -22,7 +22,7 @@ and is saved into this file:/san-data/usecase/agentpm/AgentProductionModel/agtsp
 
 
 The top 10 zip features data are saved into 'top10ZipFeatures_2010.csv', as for 2010 year
-in /san-data/usecase/agentpm/AgentProductionModel/
+in /san-data/usecase/agentpm/AgentProductionModel/top10ZipFeatures
 
 The raw target data(pif sum and prem sum of agents) are queried using in saved queries:pif_prem_sum_autoagents 
 and the result is saved in hdfs table: / user/ ejlq/ apm/auto_agts_pif_prem_sum.csv

@@ -7,7 +7,7 @@ import collections
 os.chdir('/san-data/usecase/agentpm/AgentProductionModel/')
 
 # Read the file has each agents' home zip and top 10 pols zips
-dfRes = pd.read_pickle('radiusZips')
+dfRes = pd.read_pickle('radiusAnalysis/radiusZips')
 
 ## Count how many agents got top 10 - 1 zips returned:
 c = collections.Counter([len(x) for x in dfRes.TOP10ZIPS])
@@ -104,5 +104,5 @@ zip9Merged.columns = ['zip9_'+ x for x in zip9Merged.columns]
 dfZipFeatures = pd.concat([homezipMerged,zip0Merged,zip1Merged,zip2Merged,zip3Merged,zip4Merged,zip5Merged,zip6Merged,zip7Merged,zip8Merged,zip9Merged],axis = 1)
 
 
-dfZipFeatures.to_csv('top10ZipFeatures_2010.csv',index = None)
-dfZipFeatures.to_pickle('top10ZipFeatures_2010')
+dfZipFeatures.to_csv('top10ZipFeatures/top10ZipFeatures_2010.csv',index = None)
+dfZipFeatures.to_pickle('top10ZipFeatures/top10ZipFeatures_2010')

@@ -8,7 +8,7 @@ from scipy.spatial.distance import pdist, squareform
 
 # The agent pols data is depracated, need to use the new one once is available
 # will replace it later, use for now for just some areas analysis
-DFAgentPols = pd.read_csv('/san-data/usecase/agentpm/AgentProductionModel/agents_and_policies_auto.csv',header = None)
+DFAgentPols = pd.read_csv('/san-data/usecase/agentpm/AgentProductionModel/datapull/agents_and_policies_auto.csv',header = None)
 # Add headers to the agent pol data
 agentPolHeaders =  ['POLICY_NUMBER','POLICY_KIND_CODE','PLCY_TYPE_CD','AGENT','AGENT_ASSIGN_TYPE_CD','AGENT_SERV_ST_CD_AGENT_CD','QMSLAT','QMSLON','STATUS_CODE','LOC_ADDR_01','LOC_CITY_NAME','LOC_ST_ABBR','LOC_ZIP','MARKET_UNIT_ID','DATE_EFFECTIVE_DATE','DATE_EXPIRATION_DATE','DATE_AGENT_ASSIGN_DATE','COUNTY','CITY','STATE','POSTL_ST_CD','STATE1','ZIP']
 DFAgentPols.columns = agentPolHeaders
