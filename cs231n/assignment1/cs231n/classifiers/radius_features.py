@@ -10,7 +10,7 @@ os.chdir('/san-data/usecase/agentpm/AgentProductionModel/')
 dfRes = pd.read_pickle('radiusAnalysis/radiusZips')
 
 ## Count how many agents got top 10 - 1 zips returned:
-c = collections.Counter([len(x) for x in dfRes.TOP10ZIPS])
+c = collections.Counter([len(x)/9 for x in dfRes.TOP10ZIPS])
 # Counter({1: 73,
 #          2: 113,
 #          3: 115,
