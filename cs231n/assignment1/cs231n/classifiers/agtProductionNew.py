@@ -45,8 +45,37 @@ targets2014 = targets2014[targets2014.pol_expiration_date >= '2015-01-01']
 targets2015 = targets[targets.year == 2015]
 targets2015 = targets2015[targets2015.pol_expiration_date >= '2016-01-01']
 
+# Create agt state code column
+targets2015['agtstcode'] = [str(x) +str(y) for x,y in zip(targets2015.st_cd,targets2015.agent_cd)]
+targets2014['agtstcode'] = [str(x) +str(y) for x,y in zip(targets2014.st_cd,targets2014.agent_cd)]
+targets2013['agtstcode'] = [str(x) +str(y) for x,y in zip(targets2013.st_cd,targets2013.agent_cd)]
+targets2012['agtstcode'] = [str(x) +str(y) for x,y in zip(targets2012.st_cd,targets2012.agent_cd)]
+targets2011['agtstcode'] = [str(x) +str(y) for x,y in zip(targets2011.st_cd,targets2011.agent_cd)]
 
-[str(x) +str(y) for x,y in zip(targets2015.st_cd,targets2015.agent_cd)]
+del targets2011['agent_cd']
+del targets2011['st_cd']
+del targets2012['agent_cd']
+del targets2012['st_cd']
+del targets2013['agent_cd']
+del targets2013['st_cd']
+del targets2014['agent_cd']
+del targets2014['st_cd']
+del targets2015['agent_cd']
+del targets2015['st_cd']
 
+
+ # Group by agent code
+ targets2015 = targets2015.groupby('agtstcode').agg(np.sum).reset_index()
+ del targets2015['year']
+ targets2014 = targets2014.groupby('agtstcode').agg(np.sum).reset_index()
+ del targets2014['year']
+ targets2013 = targets2013.groupby('agtstcode').agg(np.sum).reset_index()
+ del targets2013['year']
+ targets2012 = targets2012.groupby('agtstcode').agg(np.sum).reset_index()
+ del targets2012['year']
+ targets2011 = targets2011.groupby('agtstcode').agg(np.sum).reset_index()
+ del targets2011['year']
+
+targets2015.to_csv('datapull/targets2015.csv')
 ##Use 2014 features predict for 2015
 features2014 = pd.read_csv('top10ZipFeatures/top10ZipFeatures_2014.csv')
