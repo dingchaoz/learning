@@ -28,7 +28,12 @@ def setTarget(arg = None):
    delta = timedelta(days = 31)
    target = today + delta
 
-   return str(target.year) + str(target.month)
+   if len(str(target.month)) == 1:
+   		res = str(target.year) + '0' + str(target.month)
+   else:
+   		res = str(target.year) + str(target.month)
+
+   return res
 
 
 def validate(date_text):
@@ -63,7 +68,7 @@ def takeInput(argv):
 
 def getLatestDF():
 	# Read current pd file
-	df_final = pd.read_csv('../ts_actual_forecast_20161-11.csv')
+	df_final = pd.read_csv('../csv/ts_actual_forecast.csv')
 	return df_final
 
 
@@ -75,7 +80,7 @@ def validateTarget(latestDF,target):
 
 	if ptargetM < plastM:
 		#print 'Choose a target month later than: ', plastM
-		sys.exit('Choose a target month later than 201611 at least' )
+		sys.exit('Choose a target month later than 201612 at least' )
 
 # def getPrediction(target):
 
@@ -235,7 +240,6 @@ def main(argv):
 if __name__ == "__main__":
    main(sys.argv[1:])
 
-#TO-DO:
 # validate target date in the beginginig before loading any file
 # add try, except and logging
 # add func if date is already ran, refer ppl to an existing file where records all months outliers
@@ -253,7 +257,7 @@ if __name__ == "__main__":
 # oct = pd.read_csv('/san-data/usecase/atlasid/new_data/output_file/oct_time_series_scores.csv')
 # nov = pd.read_csv('/san-data/usecase/atlasid/new_data/output_file/nov_time_series_scores.csv')
 
-# atlas = pd.read_csv('/san-data/usecase/atlasid/new_data/csv/atlas_time_series.csv')
+# atlas = pd.read_csv('/san-data/usecase/atlasid/csv/atlas_time_series.csv')
 
 # jan = jan[jan.CSE_RSLT_IND == 1][['ASSOC_ID','score']]
 # feb = feb[feb.CSE_RSLT_IND == 1][['ASSOC_ID','score']]
@@ -286,6 +290,27 @@ if __name__ == "__main__":
 
 # conv_cols = ['CONV_RATE_2016'+ str(i) for i in range(1,12)]
 # score_cols = ['SCORE_2016'+ str(i) for i in range(1,12)]
+
+########################################################
+# os.chdir('/san-data/usecase/atlasid/output_file/')
+# atlas = pd.read_csv('/san-data/usecase/atlasid/csv/atlas_time_series.csv')
+# atlas_newmonth = atlas[atlas.QUOT_MONTH_new == '2017-01-01'][['ASSOC_ID','CONV_RATE']]
+# newmonth = pd.read_csv('/san-data/usecase/atlasid/output_file/201701_time_series_scores.csv')
+# newmonth = newmonth[newmonth.CSE_RSLT_IND == 1][['ASSOC_ID','score']]
+# df_final = pd.read_csv('../csv/ts_actual_forecast.csv')
+
+# newmonth.columns = ['ASSOC_ID','SCORE_201701']
+# atlas_newmonth.columns = ['ASSOC_ID','CONV_RATE_201701']
+# newmonth_merged = newmonth.merge(atlas_newmonth,on = 'ASSOC_ID')
+# df_final = df_final.merge(newmonth_merged,on = 'ASSOC_ID')
+# cols = df_final.columns.tolist()
+# newcols = cols[:13] + [cols[-1]] + cols[13:25] + [cols[-2]] + cols[25:-2]
+# df_final = df_final[newcols]
+# df_final['ERR_201701'] = df_final['CONV_RATE_201701'] - df_final['SCORE_201701']
+# df_final.to_csv('../csv/ts_actual_forecast.csv',index = None)
+########################################################
+
+
 # cols = ['ASSOC_ID'] + conv_cols + score_cols
 # df_final.columns = cols
 
