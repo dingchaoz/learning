@@ -25,7 +25,7 @@ targets_features2015 = pd.read_csv('datapull/targets_features2015.csv')
 yX_DF = pd.concat([targets_features2015.pifsum,targets_features2015.premsum,agg_features2015],axis = 1)
 
 #None aggregated feature dataset
-#yX_DF = targets_features2015
+#yX_DF = targets_features2015.drop(['agtstcode','ST_AGT_CD'],axis = 1)
 
 
 
