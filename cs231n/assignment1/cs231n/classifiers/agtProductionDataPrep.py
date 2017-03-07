@@ -115,3 +115,17 @@ features2014 = pd.read_csv('top10ZipFeatures/top10ZipFeatures_2014.csv')
 # Join features with targets into one df, NOTE some agents in targets didn't have
 # any join of features: 19840 agent_st_cd in targets, 17506 agent code in features,11277 joined
 targets_featues2015 = targets2015.merge(features2014,left_on = 'agtstcode', right_on = 'ST_AGT_CD',how = 'inner')
+targets_featues2015.to_csv('datapull/targets_features2015.csv',index = None)
+
+# Create zip0-9 aggregated features
+uniquefeatures = targets_featues2015.filter(regex = 'zip0').columns.tolist()
+uniquefeatures = [x.split('zip0_')[1] for x in uniquefeatures]
+targets_featues2015.filter(regex = '_NEWPOL_HLTH8').sum(axis = 1)
+
+# Create a placeholder for agged features
+agg_features2015 = pd.DataFrame()
+for i,feature in enumerate(uniquefeatures):
+	agg_features2015[i] = targets_featues2015.filter(regex = feature).sum(axis = 1)
+
+agg_features2015.columns = uniquefeatures
+agg_features2015.to_csv('datapull/targets_aggfeatures2015.csv',index = None)
