@@ -9,12 +9,16 @@ from sklearn import datasets
 from sklearn import svm
 import h2o
 import pandas as pd
-h2o.connect(ip = '10.96.242.158', port = '54321')
+h2o.connect(ip = '10.96.242.230', port = '54321')
+
 
 os.chdir('/san-data/usecase/agentpm/AgentProductionModel/')
 
 agg_features2015 = pd.read_csv('datapull/targets_aggfeatures2015.csv')
 targets_features2015 = pd.read_csv('datapull/targets_features2015.csv')
+
+# Put the xy together in one data frame
+yX_DF = pd.concat([targets_features2015.pifsum,targets_features2015.premsum,agg_features2015],axis = 1)
 
 # y = targets_features2015.pifsum
 # #X = targets_features2015.iloc[:,18:]
@@ -29,12 +33,12 @@ targets_features2015 = pd.read_csv('datapull/targets_features2015.csv')
 # X_test, y_test = X[offset:], y[offset:]
 
 ###H2O run:
-dfTrain = agg_features2015
+dfTrain = yX_DF.drop(['pifsum','premsum'],axis = 1)
 
 # Convert the dfs into H2O format
 # dfAuto_h2o has all the columns
 # dfAuto_train has only the train columns
-dfAuto_h2o = h2o.H2OFrame(python_obj = targets_features2015.to_dict('list'))
+dfAuto_h2o = h2o.H2OFrame(python_obj = yX_DF.to_dict('list'))
 dfAuto_train = h2o.H2OFrame(python_obj=dfTrain.to_dict('list'))
 
 ## the response variable
@@ -63,4 +67,18 @@ gbm.train(x=predictors, y=response, training_frame=train)
 ## Show a detailed model summary
 print gbm
 
+## Get the metrics on the validation set
+perf = gbm.model_performance(valid)
+print perf
+
+from sklearn.utils import check_array
+def mape(y_true, y_pred): 
+ 
+        return np.mean([np.abs(x - y) for x, y in zip(y_true, y_pred)])/ np.mean(y_true)
+
+truth = h2o.as_list(valid).pifsum
+predict = h2o.as_list(gbm.predict(valid))
+pd.concat([predict,truth],axis = 1)
+
+##the mae is 464, and the pifsum avg is about 1481, error too high
 

@@ -110,6 +110,7 @@ targets2013.to_csv('datapull/targets2013.csv',index = None)
 targets2012.to_csv('datapull/targets2012.csv',index = None)
 targets2011.to_csv('datapull/targets2011.csv',index = None)
 
+#########################################################
 ##Use 2014 features predict for 2015
 features2014 = pd.read_csv('top10ZipFeatures/top10ZipFeatures_2014.csv')
 # Join features with targets into one df, NOTE some agents in targets didn't have
@@ -129,3 +130,114 @@ for i,feature in enumerate(uniquefeatures):
 
 agg_features2015.columns = uniquefeatures
 agg_features2015.to_csv('datapull/targets_aggfeatures2015.csv',index = None)
+
+#########################################################
+##Use 2013 features predict for 2015
+features2013 = pd.read_csv('top10ZipFeatures/top10ZipFeatures_2013.csv')
+# Join features with targets into one df, NOTE some agents in targets didn't have
+# any join of features: 19840 agent_st_cd in targets, 17506 agent code in features,11277 joined
+targets2015_featues2013 = targets2015.merge(features2013,left_on = 'agtstcode', right_on = 'ST_AGT_CD',how = 'inner')
+targets2015_featues2013.to_csv('datapull/targets2015_featues2013.csv',index = None)
+
+# Create zip0-9 aggregated features
+uniquefeatures = targets2015_featues2013.filter(regex = 'zip0').columns.tolist()
+uniquefeatures = [x.split('zip0_')[1] for x in uniquefeatures]
+targets2015_featues2013.filter(regex = '_NEWPOL_HLTH8').sum(axis = 1)
+
+# Create a placeholder for agged features
+agg_features2013 = pd.DataFrame()
+for i,feature in enumerate(uniquefeatures):
+	agg_features2013[i] = targets2015_featues2013.filter(regex = feature).sum(axis = 1)
+
+agg_features2013.columns = uniquefeatures
+agg_features2013.to_csv('datapull/targets2015_aggfeatures2013.csv',index = None)
+
+#########################################################
+##Use 2012 features predict for 2015
+features2012 = pd.read_csv('top10ZipFeatures/top10ZipFeatures_2012.csv')
+# Join features with targets into one df, NOTE some agents in targets didn't have
+# any join of features: 19840 agent_st_cd in targets, 17506 agent code in features,11277 joined
+targets2015_featues2012 = targets2015.merge(features2012,left_on = 'agtstcode', right_on = 'ST_AGT_CD',how = 'inner')
+targets2015_featues2012.to_csv('datapull/targets2015_featues2012.csv',index = None)
+
+# Create zip0-9 aggregated features
+uniquefeatures = targets2015_featues2012.filter(regex = 'zip0').columns.tolist()
+uniquefeatures = [x.split('zip0_')[1] for x in uniquefeatures]
+targets2015_featues2012.filter(regex = '_NEWPOL_HLTH8').sum(axis = 1)
+
+# Create a placeholder for agged features
+agg_features2012 = pd.DataFrame()
+for i,feature in enumerate(uniquefeatures):
+	agg_features2012[i] = targets2015_featues2012.filter(regex = feature).sum(axis = 1)
+
+agg_features2012.columns = uniquefeatures
+agg_features2012.to_csv('datapull/targets2015_aggfeatures2012.csv',index = None)
+
+#########################################################
+##Use 2011 features predict for 2015
+features2011 = pd.read_csv('top10ZipFeatures/top10ZipFeatures_2011.csv')
+# Join features with targets into one df, NOTE some agents in targets didn't have
+# any join of features: 19840 agent_st_cd in targets, 17506 agent code in features,11277 joined
+targets2015_featues2011 = targets2015.merge(features2011,left_on = 'agtstcode', right_on = 'ST_AGT_CD',how = 'inner')
+targets2015_featues2011.to_csv('datapull/targets2015_featues2011.csv',index = None)
+
+# Create zip0-9 aggregated features
+uniquefeatures = targets2015_featues2011.filter(regex = 'zip0').columns.tolist()
+uniquefeatures = [x.split('zip0_')[1] for x in uniquefeatures]
+targets2015_featues2011.filter(regex = '_NEWPOL_HLTH8').sum(axis = 1)
+
+# Create a placeholder for agged features
+agg_features2011 = pd.DataFrame()
+for i,feature in enumerate(uniquefeatures):
+	agg_features2011[i] = targets2015_featues2011.filter(regex = feature).sum(axis = 1)
+
+agg_features2011.columns = uniquefeatures
+agg_features2011.to_csv('datapull/targets2015_aggfeatures2011.csv',index = None)
+
+#########################################################
+# Function to return xy data frame,give year of feature and year of target
+def createXY(yFeature,yTarget):
+
+	## Construct read file path
+	targetsFilePath = 'datapull/targets' + yTarget +'.csv'
+	featuresFilePath = 'top10ZipFeatures/top10ZipFeatures_' + yFeature +'.csv'
+
+	## Contrucst export file path
+	savetf_FilePath = 'datapull/targets_' + yTarget +'_features' + yFeature +'.csv'
+	saveaggf_FilePath = 'datapull/targets_' + yTarget +'_aggfeatures' + yFeature +'.csv'
+	# Read in features and targets
+	features = pd.read_csv(featuresFilePath)
+	targets = pd.read_csv(targetsFilePath)
+
+	# Join features with targets into one df, NOTE some agents in targets didn't have
+	# any join of features: 19840 agent_st_cd in targets, 17506 agent code in features,11277 joined
+	targets_featues = targets.merge(features,left_on = 'agtstcode', right_on = 'ST_AGT_CD',how = 'inner')
+	targets_featues.to_csv(saveFilePath,index = None)
+
+	# Create zip0-9 aggregated features
+	uniquefeatures = targets_featues.filter(regex = 'zip0').columns.tolist()
+	uniquefeatures = [x.split('zip0_')[1] for x in uniquefeatures]
+
+
+	# Create a placeholder for agged features
+	agg_features = pd.DataFrame()
+	for i,feature in enumerate(uniquefeatures):
+		agg_features[i] = targets_featues.filter(regex = feature).sum(axis = 1)
+
+	agg_features.columns = uniquefeatures
+	agg_features.to_csv(saveaggf_FilePath,index = None)
+
+
+#########################################################
+## tplus1 predict: 11->12,12->13,13->14,14->15
+
+#########################################################
+## tplus2 predict: 11->13, 12->14,13->15
+
+#########################################################
+## tplus3 predict: 11->14,12->15
+
+#########################################################
+## tplus4 predict: 11->15
+
+
