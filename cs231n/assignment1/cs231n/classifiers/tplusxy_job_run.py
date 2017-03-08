@@ -63,22 +63,22 @@ tplus1XY.to_csv('datapull/tplus1XY.csv',index = None)
 #########################################################
 #########################################################
 ## tplus2 predict: 11->13, 12->14,13->15
-targets2015_features2013 = pd.read_csv('datapull/targets2015_features2013.csv')
-createXY(2014,2012)
-targets2014_features2012 = pd.read_csv('datapull/targets2014_features2012.csv')
-createXY(2013,2011)
-targets2013_features2011 = pd.read_csv('datapull/targets2013_features2011.csv')
+targets2015_aggfeatures2013 = pd.read_csv('datapull/targets2015_aggfeatures2013.csv')
+#createXY(2014,2012)
+targets2014_aggfeatures2012 = pd.read_csv('datapull/targets2014_aggfeatures2012.csv')
+#createXY(2013,2011)
+targets2013_aggfeatures2011 = pd.read_csv('datapull/targets2013_aggfeatures2011.csv')
 tplus2XY = pd.concat([targets2015_aggfeatures2013,targets2014_aggfeatures2012,targets2013_aggfeatures2011],axis = 0)
 tplus2XY.to_csv('datapull/tplus2XY.csv',index = None)
 #########################################################
 ## tplus3 predict: 11->14,12->15
-targets2015_features2012 = pd.read_csv('datapull/targets2015_features2012.csv')
-createXY(2014,2011)
-targets2014_aggfeatures2011 = pd.read_csv('datapull/targets2014_features2011.csv')
+targets2015_aggfeatures2012 = pd.read_csv('datapull/targets2015_aggfeatures2012.csv')
+#createXY(2014,2011)
+targets2014_aggfeatures2011 = pd.read_csv('datapull/targets2014_aggfeatures2011.csv')
 tplus3XY = pd.concat([targets2015_aggfeatures2012,targets2014_aggfeatures2011],axis = 0)
 tplus3XY.to_csv('datapull/tplus3XY.csv',index = None)
 #########################################################
 ## tplus4 predict: 11->15
-targets2015_features2011 = pd.read_csv('datapull/targets2015_features2011.csv')
+targets2015_aggfeatures2011 = pd.read_csv('datapull/targets2015_aggfeatures2011.csv')
 tplus4XY = targets2015_aggfeatures2011
 tplus4XY.to_csv('datapull/tplus4XY.csv',index = None)

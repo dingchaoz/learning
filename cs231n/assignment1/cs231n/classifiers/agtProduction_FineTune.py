@@ -14,19 +14,27 @@ import math
 from h2o.estimators.gbm import H2OGradientBoostingEstimator
 from h2o.grid.grid_search import H2OGridSearch
 from h2o.estimators.random_forest import H2ORandomForestEstimator
-h2o.connect(ip = '10.96.242.230', port = '54321')
+h2o.connect(ip = '10.96.242.158', port = '54321')
 
 os.chdir('/san-data/usecase/agentpm/AgentProductionModel/')
 
 agg_features2015 = pd.read_csv('datapull/targets_aggfeatures2015.csv')
 targets_features2015 = pd.read_csv('datapull/targets_features2015.csv')
 
-# Put the xy together in one data frame in aggregated feature form
-yX_DF = pd.concat([targets_features2015.pifsum,targets_features2015.premsum,agg_features2015],axis = 1)
+##########################################
+#note: 2017-03-08 so far tried agged and non agged version of single 14-15 train predict
+# mape is about 30%, mae 470, average pifsum is 1400, so not good result
 
+###### the single year train predict data loading :
+# Put the xy together in one data frame in aggregated feature form
+#yX_DF = pd.concat([targets_features2015.pifsum,targets_features2015.premsum,agg_features2015],axis = 1)
 #None aggregated feature dataset
 #yX_DF = targets_features2015.drop(['agtstcode','ST_AGT_CD'],axis = 1)
 
+
+###### use the 11,12,13,14 --> 15, mae goes down to 412, better but still too high for pifsum
+###### did the same thing for premsum predict, mape is also 29%
+yX_DF = pd.read_csv('datapull/tplus1XY.csv')
 
 
 ###H2O run:
@@ -39,7 +47,7 @@ dfAuto_h2o = h2o.H2OFrame(python_obj = yX_DF.to_dict('list'))
 dfAuto_train = h2o.H2OFrame(python_obj=dfTrain.to_dict('list'))
 
 ## the response variable
-response = 'pifsum'
+response = 'premsum'
 dfAuto_h2o[response] = dfAuto_h2o[response]         
 
 ## use all other columns (except for the name & the response column ("survived")) as predictors
@@ -52,14 +60,14 @@ train, valid, test = dfAuto_h2o.split_frame(
     destination_frames=['train.hex','valid.hex','test.hex']
 )
 
-rf_v1 = H2ORandomForestEstimator(
-    model_id="rf_covType_v1",
+rf_v1_prem = H2ORandomForestEstimator(
+    model_id="rf_covType_v1_prem",
     ntrees=200,
     stopping_rounds=2,
     score_each_iteration=True,
     seed=1000000)
 
-rf_v1.train(x=predictors, y=response, training_frame=train, validation_frame=valid)
+rf_v1_prem.train(x=predictors, y=response, training_frame=train, validation_frame=valid)
 
 ## save_Model, doesn't work got access issue: h2o.save_model(rfv1,'home/ejlq',force = True)
 # so i had to use the GUI to export it, seems the model is saved on the worker node of h2o
