@@ -9,7 +9,6 @@ from sklearn import ensemble
 from sklearn import datasets
 from sklearn import svm
 import h2o
-import pandas as pd
 import math
 from h2o.estimators.gbm import H2OGradientBoostingEstimator
 from h2o.grid.grid_search import H2OGridSearch
@@ -18,8 +17,8 @@ h2o.connect(ip = '10.96.242.158', port = '54321')
 
 os.chdir('/san-data/usecase/agentpm/AgentProductionModel/')
 
-agg_features2015 = pd.read_csv('datapull/targets_aggfeatures2015.csv')
-targets_features2015 = pd.read_csv('datapull/targets_features2015.csv')
+# agg_features2015 = pd.read_csv('datapull/targets_aggfeatures2015.csv')
+# targets_features2015 = pd.read_csv('datapull/targets_features2015.csv')
 
 ##########################################
 #note: 2017-03-08 so far tried agged and non agged version of single 14-15 train predict
@@ -31,6 +30,8 @@ targets_features2015 = pd.read_csv('datapull/targets_features2015.csv')
 #None aggregated feature dataset
 #yX_DF = targets_features2015.drop(['agtstcode','ST_AGT_CD'],axis = 1)
 
+# Get the last 6 years agent assignment info
+DFAgentLoc = pd.read_csv('Agents_Sep_2016.csv')
 
 ###### use the 11,12,13,14 --> 15, mae goes down to 412, better but still too high for pifsum
 ###### did the same thing for premsum predict, mape is also 29%
@@ -69,6 +70,9 @@ rf_v1 = H2ORandomForestEstimator(
 
 rf_v1.train(x=predictors, y=response, training_frame=train, validation_frame=valid)
 
+#evaluate result on valid dataset
+rf_v1.model_performance(valid)
+
 truth = h2o.as_list(valid).pifsum
 prev_truth = h2o.as_list(valid).prev_pifsum
 predict = h2o.as_list(rf_v1.predict(valid))
@@ -102,7 +106,7 @@ rf_v2 = H2ORandomForestEstimator(
     score_each_iteration=True,
     seed=3000000)
 rf_v2.train(x=predictors, y=response, training_frame=train, validation_frame=valid)
-#
+rf_v2.model_performance(valid)
 
 #v3 gbm
 gbm_v3 = H2OGradientBoostingEstimator(
@@ -118,3 +122,4 @@ gbm_v3 = H2OGradientBoostingEstimator(
     seed=2000000
 )
 gbm_v3.train(x=predictors, y=response, training_frame=train, validation_frame=valid)
+gbm_v3.model_performance(valid)
