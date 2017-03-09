@@ -38,7 +38,7 @@ yX_DF = pd.read_csv('datapull/tplus1XY.csv')
 
 
 ###H2O run:
-dfTrain = yX_DF.drop(['pifsum','premsum'],axis = 1)
+dfTrain = yX_DF.drop(['pifsum','premsum','agtstcode'],axis = 1)
 
 # Convert the dfs into H2O format
 # dfAuto_h2o has all the columns
@@ -47,7 +47,7 @@ dfAuto_h2o = h2o.H2OFrame(python_obj = yX_DF.to_dict('list'))
 dfAuto_train = h2o.H2OFrame(python_obj=dfTrain.to_dict('list'))
 
 ## the response variable
-response = 'premsum'
+response = 'pifsum'
 dfAuto_h2o[response] = dfAuto_h2o[response]         
 
 ## use all other columns (except for the name & the response column ("survived")) as predictors
@@ -60,14 +60,20 @@ train, valid, test = dfAuto_h2o.split_frame(
     destination_frames=['train.hex','valid.hex','test.hex']
 )
 
-rf_v1_prem = H2ORandomForestEstimator(
-    model_id="rf_covType_v1_prem",
+rf_v1 = H2ORandomForestEstimator(
+    model_id="rf_covType_v1",
     ntrees=200,
     stopping_rounds=2,
     score_each_iteration=True,
     seed=1000000)
 
-rf_v1_prem.train(x=predictors, y=response, training_frame=train, validation_frame=valid)
+rf_v1.train(x=predictors, y=response, training_frame=train, validation_frame=valid)
+
+truth = h2o.as_list(valid).pifsum
+prev_truth = h2o.as_list(valid).prev_pifsum
+predict = h2o.as_list(rf_v1.predict(valid))
+agtstcode = h2o.as_list(valid).agtstcode
+pd.concat([agtstcode,predict,prev_truth,truth],axis = 1)
 
 ## save_Model, doesn't work got access issue: h2o.save_model(rfv1,'home/ejlq',force = True)
 # so i had to use the GUI to export it, seems the model is saved on the worker node of h2o

@@ -212,9 +212,88 @@ tplus4XY.to_csv('datapull/tplus4XY.csv',index = None)
 ######################################################### predictive enough, this model
 ######################################################### is for ALL agents prod preeiction
 ######################################################### 
+## tplus1 predict: 11->12,12->13,13->14,14->15
+# Create prev premsum and prev pifum for non agged version tplus
+targets2015_features2014 = pd.read_csv('datapull/targets2015_features2014.csv')
+targets2014_features2013 = pd.read_csv('datapull/targets2014_features2013.csv')
+targets2013_features2012 = pd.read_csv('datapull/targets2013_features2012.csv')
+targets2012_features2011 = pd.read_csv('datapull/targets2012_features2011.csv')
+targets2011 = pd.read_csv('datapull/targets2011.csv')
+targets2015_features2014['prev_pifsum'] = targets2014_features2013['pifsum']
+targets2015_features2014['prev_premsum'] = targets2014_features2013['premsum']
+targets2014_features2013['prev_pifsum'] = targets2013_features2012['pifsum']
+targets2014_features2013['prev_premsum'] = targets2013_features2012['premsum']
+targets2013_features2012['prev_pifsum'] = targets2012_features2011['pifsum']
+targets2013_features2012['prev_premsum'] = targets2012_features2011['premsum']
+targets2012_features2011['prev_pifsum'] = targets2011['pifsum']
+targets2012_features2011['prev_premsum'] = targets2011['premsum']
+tplus1XY_nonagged = pd.concat([targets2015_features2014,targets2014_features2013,targets2013_features2012,targets2012_features2011],axis = 0)
+tplus1XY_nonagged.to_csv('datapull/tplus1XY_nonagged.csv',index = None)
+
+# Add agtcode, prev premsum and prev pifsum to agged version of tplus
+tplus1XY = pd.read_csv('datapull/tplus1XY.csv')
+tplus1XY_nonagged.reset_index(inplace = True)
+tplus1XY['agtstcode'] = tplus1XY_nonagged['agtstcode']
+tplus1XY['prev_pifsum'] = tplus1XY_nonagged['prev_pifsum']
+tplus1XY['prev_premsum'] = tplus1XY_nonagged['prev_premsum']
+tplus1XY.to_csv('datapull/tplus1XY.csv',index = None)
+## tplus2 predict: 11->13, 12->14,13->15
+targets2015_features2013 = pd.read_csv('datapull/targets2015_features2013.csv')
+targets2014_features2012 = pd.read_csv('datapull/targets2014_features2012.csv')
+targets2013_features2011 = pd.read_csv('datapull/targets2013_features2011.csv')
+
+targets2012 = pd.read_csv('datapull/targets2012.csv')
+targets2015_features2013['prev_pifsum'] = targets2013_features2011['pifsum']
+targets2015_features2013['prev_premsum'] = targets2013_features2011['premsum']
+targets2014_features2012['prev_pifsum'] = targets2012['pifsum']
+targets2014_features2012['prev_premsum'] = targets2012['premsum']
+targets2013_features2011['prev_pifsum'] = targets2011['pifsum']
+targets2013_features2011['prev_premsum'] = targets2011['premsum']
+tplus2XY_nonagged = pd.concat([targets2015_features2013,targets2014_features2012,targets2013_features2011],axis = 0)
+tplus2XY_nonagged.to_csv('datapull/tplus2XY_nonagged.csv',index = None)
+
+# Add agtcode, prev premsum and prev pifsum to agged version of tplus
+tplus2XY = pd.read_csv('datapull/tplus2XY.csv')
+tplus2XY_nonagged.reset_index(inplace = True)
+tplus2XY['agtstcode'] = tplus2XY_nonagged['agtstcode']
+tplus2XY['prev_pifsum'] = tplus2XY_nonagged['prev_pifsum']
+tplus2XY['prev_premsum'] = tplus2XY_nonagged['prev_premsum']
+tplus2XY.to_csv('datapull/tplus2XY.csv',index = None)
+
+## tplus3 predict: 11->14, 12->15
+targets2015_features2012 = pd.read_csv('datapull/targets2015_features2012.csv')
+targets2014_features2011 = pd.read_csv('datapull/targets2014_features2011.csv')
 
 
+targets2015_features2012['prev_pifsum'] = targets2012['pifsum']
+targets2015_features2012['prev_premsum'] = targets2012['premsum']
+targets2014_features2011['prev_pifsum'] = targets2011['pifsum']
+targets2014_features2011['prev_premsum'] = targets2011['premsum']
 
+tplus3XY_nonagged = pd.concat([targets2015_features2012,targets2014_features2011],axis = 0)
+tplus3XY_nonagged.to_csv('datapull/tplus3XY_nonagged.csv',index = None)
+# Add agtcode, prev premsum and prev pifsum to agged version of tplus
+tplus3XY = pd.read_csv('datapull/tplus3XY.csv')
+tplus3XY_nonagged.reset_index(inplace = True)
+tplus3XY['agtstcode'] = tplus3XY_nonagged['agtstcode']
+tplus3XY['prev_pifsum'] = tplus3XY_nonagged['prev_pifsum']
+tplus3XY['prev_premsum'] = tplus3XY_nonagged['prev_premsum']
+tplus3XY.to_csv('datapull/tplus3XY.csv',index = None)
+
+## tplus4 predict: 11->15
+targets2015_features2011 = pd.read_csv('datapull/targets2015_features2011.csv')
+targets2015_features2011['prev_pifsum'] = targets2011['pifsum']
+targets2015_features2011['prev_premsum'] = targets2011['premsum']
+tplus4XY_nonagged = targets2015_features2011
+tplus4XY_nonagged.to_csv('datapull/tplus4XY_nonagged.csv',index = None)
+
+# Add agtcode, prev premsum and prev pifsum to agged version of tplus
+tplus4XY = pd.read_csv('datapull/tplus4XY.csv')
+tplus4XY_nonagged.reset_index(inplace = True)
+tplus4XY['agtstcode'] = tplus4XY_nonagged['agtstcode']
+tplus4XY['prev_pifsum'] = tplus4XY_nonagged['prev_pifsum']
+tplus4XY['prev_premsum'] = tplus4XY_nonagged['prev_premsum']
+tplus4XY.to_csv('datapull/tplus4XY.csv',index = None)
 ######################################################### Add agents tenure, assignment type
 ######################################################### features
 ######################################################### as pure demo/bus pol features not
