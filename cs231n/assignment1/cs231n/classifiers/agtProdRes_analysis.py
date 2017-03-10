@@ -80,5 +80,5 @@ yX_DF4 = pd.read_csv('datapull/tplus4XY.csv')
 yX_DF_NewAgents4 = newAgentXY(yX_DF4)
 yX_DF_NewAgents4.to_csv('datapull/tplus4XY_newAgents.csv',index = None)
 
-##TODO: use delta function to get the tenure
-
+##look at stuff in h2o
+# hdfs dfs -ls output9/_temporary/1/_temporary/
