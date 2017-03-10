@@ -10,11 +10,11 @@ need to query the file year by year, aggregate each years' data to each agent, t
 renewing the model, just need to repeat the concate with the latest new year data.
 
 
-
+##################################Agent Production Model Building##########################
 
 #### Radis analysis data pull
 2 raw files, 1st is '/san-data/usecase/agentpm/AgentProductionModel/agents_and_policies_auto.csv'
-which is produced using agt_and_policies in my saved queries in hive
+which is produced using agt_and_policies in my saved queries in hive agt_and_policies
 2nd file is '/san-data/usecase/agentpm/AgentProductionModel/Agents_Sep_2016.csv' which is agent loc info
 
 These 2 files were merged and new columns about the distance between home office to each pol loca calcualted
@@ -27,5 +27,13 @@ in /san-data/usecase/agentpm/AgentProductionModel/top10ZipFeatures/top10ZipFeatu
 The raw target data(pif sum and prem sum of agents) are queried using in saved queries:pif_prem_sum_autoagents 
 and the result is saved in hdfs table: / user/ ejlq/ apm/auto_agts_pif_prem_sum.csv
 and also copied to edgenode as:/san-data/usecase/agentpm/AgentProductionModel/datapull/auto_agts_pif_prem_sum.csv
+
+################################## New Zip Code Production Model Building###################
+### this time use demo and business from zipmerged file as features
+
+## Pull all pifsum and premsum by zipcode by tear by effective and expiration date
+## query is auto_pif_prem_sum_byZip_effect_date
+
+
 
 
