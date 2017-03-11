@@ -106,4 +106,21 @@ df_final['3yrAvg'] = df_final[['pifsum2014','pifsum2013','pifsum2012']].mean(axi
 mean_absolute_error(df_final['3yrAvg'], df_final.pifsum2015)
 
 # Now look at new agents only, see if 3 year would make sense
+os.chdir('/san-data/usecase/agentpm/AgentProductionModel/')
 
+# Get the last 6 years agent assignment info
+DFAgentAssign = pd.read_excel('2010-2016New_Agent_Assignments.xlsx')
+
+# Sum up multiple assginements
+DFAgentAssign[['SUM_of_ASGN_A_POLS','SUM_of_ASGN_A_PREM','SUM_of_ASGN_F_PREM','SUM_of_ASGN_F_POLS']] \
+= DFAgentAssign.groupby(['STCODE'])[['SUM_of_ASGN_A_POLS','SUM_of_ASGN_A_PREM','SUM_of_ASGN_F_PREM',\
+'SUM_of_ASGN_F_POLS']] .transform('sum')
+
+# Drop duplicates and only keep the first record
+DFAgentAssign.drop_duplicates('STCODE',keep = 'first',inplace = True)
+DFAgentAssign['STCODE'] = [str(x) for x in DFAgentAssign['STCODE']]
+df_final['agtstcode'] = [str(x) for x in df_final['agtstcode']]
+
+newAgentsTargets = df_final.merge(DFAgentAssign,left_on = 'agtstcode',right_on = 'STCODE')
+
+newAgentsTargets['3yrAvg'] = newAgentsTargets[['pifsum2014','pifsum2013','pifsum2012']].mean(axis = 1)

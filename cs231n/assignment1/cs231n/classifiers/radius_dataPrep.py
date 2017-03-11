@@ -7,12 +7,6 @@ import collections
 import matplotlib.pyplot as plt
 from scipy.spatial.distance import pdist, squareform
 
-### This script takes long to run, and it is better to run it in the backend
-# http://askubuntu.com/questions/396654/how-to-run-the-python-program-in-the-background-in-ubuntu-machine
-# :nohup python radius_production.py &
-# see the program again use: ps ax | grep radius_production.py
-# double check the nohup output using: tail nohup.out
-# kill the program using top, u, then ejlq, then find the active python PID, kill it
 
 # The agent pols data is depracated, need to use the new one once is available
 # will replace it later, use for now for just some areas analysis
