@@ -80,5 +80,10 @@ yX_DF4 = pd.read_csv('datapull/tplus4XY.csv')
 yX_DF_NewAgents4 = newAgentXY(yX_DF4)
 yX_DF_NewAgents4.to_csv('datapull/tplus4XY_newAgents.csv',index = None)
 
+## tplus5 new agents XY
+yX_DF5 = pd.read_csv('datapull/tplus5XY.csv')
+yX_DF_NewAgents5 = newAgentXY(yX_DF5)
+yX_DF_NewAgents5.to_csv('datapull/tplus5XY_newAgents.csv',index = None)
+
 ##look at stuff in h2o
 # hdfs dfs -ls output9/_temporary/1/_temporary/

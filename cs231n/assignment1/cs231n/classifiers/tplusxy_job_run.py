@@ -82,3 +82,12 @@ tplus3XY.to_csv('datapull/tplus3XY.csv',index = None)
 targets2015_aggfeatures2011 = pd.read_csv('datapull/targets2015_aggfeatures2011.csv')
 tplus4XY = targets2015_aggfeatures2011
 tplus4XY.to_csv('datapull/tplus4XY.csv',index = None)
+#########################################################
+## tplus5 predict: 10->15
+createXY(2015,2010)
+targets2015_aggfeatures2010 = pd.read_csv('datapull/targets2015_aggfeatures2010.csv')
+tplus5XY = targets2015_aggfeatures2010
+# the agg features doesnot have agtstcode, thus append it from the tpluss4 which has the same
+# pifsum and premsum
+tplus5XY['agtstcode'] = yX_DF4.agtstcode
+tplus5XY.to_csv('datapull/tplus5XY.csv',index = None)
