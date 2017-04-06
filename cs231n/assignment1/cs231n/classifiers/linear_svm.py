@@ -19,6 +19,24 @@ def svm_loss_naive(W, X, y, reg):
   - loss as single float
   - gradient with respect to weights W; an array of same shape as W
   """
+
+  """
+  steps to implement vectorized loss and gradient computation
+  1. initialize placeholder dW and loss
+  2. compute score function
+  3. compute margin function
+  4. compute maximum compare between margin and 0
+  5.1 sum up the margin > 0 equals total loss
+  5.2 to get dW
+      5.2.1 count the number of class scores did not meet the margin, dWyi equals to the
+      Xi dimension scaled by this number
+      5.2.1 count 1 for each of the class j's score did not meet the margin, dWj(j != yi)
+      equals to the Xi dimension
+      5.2.3 we construct an np array named count to store the above 2 steps counts
+      count is 500x5 dimension, it stores the number of scale coefficient for each image
+      5.2.4 dW = X.T.dot(count)
+  """
+
   dW = np.zeros(W.shape) # initialize the gradient as zero
 
   # compute the loss and the gradient
@@ -69,136 +87,82 @@ def svm_loss_vectorized(W, X, y, reg):
 
   Inputs and outputs are the same as svm_loss_naive.
   """
-  loss = 0.0
+
+  # step 1
   dW = np.zeros(W.shape) # initialize the gradient as zero
-  vdW = np.zeros(W.shape) # initialize the gradient as zero
+  loss = 0.0 # initialize loss
   #############################################################################
   # TODO:                                                                     #
   # Implement a vectorized version of the structured SVM loss, storing the    #
   # result in loss.                                                           #
   #############################################################################
-   # compute the loss and the gradient
-  num_classes = W.shape[1]
+
   num_train = X.shape[0]
-  loss = 0.0
+  num_class = W.shape[1]
+
+  # step 2
+  # Compute to get our score matrix
   vScores = X.dot(W)
 
+  # step 3
+  # get correct class score
   """
-  Get the correct class score for each X,the V[range(a),range(b)] is a fast 2d indexing
-  e.g. vScores[range(2),np.array([3,2])] is equivalent to
-  np.array([vScores[0,3],vScores[1,2]])
-
+   Get the correct class score for each X,the V[range(a),range(b)] is a fast 2d indexing
+   e.g. vScores[range(2),np.array([3,2])] is equivalent to
+   np.array([vScores[0,3],vScores[1,2]])
   """
-  vCorrect_class_score = vScores[range(num_train), y]
-
-  # Broadcast to compute margin
+  vCorrect_class_score = vScores[range(num_train),y]
+  # compute margin using broadcast
   vMargin = vScores - np.reshape(vCorrect_class_score,(num_train,1)) + 1
-
-  """
-  method 1
-
-  """
   # assign all the correct class margin entry as 0
   vMargin[range(num_train),y] = 0
 
+  # step 4
+  # compare element wise to get maximum
   # np.maximum compares 2 arrays and return element wise maximum of x1,x2
   maxMargin = np.maximum(np.zeros(vMargin.shape),vMargin)
 
-  # sum up to a scalar loss value
+  # step 5.1
+  # sum up maximum loss
   loss = np.sum(maxMargin)
 
-
-  """
-  method 2
-
-  # if j == y[i] do not include in loss (or dW)
-  mask = np.zeros(vMargin.shape)
-  mask[range(num_train),y] = 1
-  loss = (vMargin-mask)[vMargin>0].sum()
-  """
-
-
-  # Right now the loss is a sum over all training examples, but we want it
-  # to be an average instead so we divide by num_train.
-  loss /= num_train
-
-  # Add regularization to the loss.
-  loss += 0.5 * reg * np.sum(W * W)
-
-  #############################################################################
-  #                             END OF YOUR CODE                              #
-  #############################################################################
-
-
-  #############################################################################
-  # TODO:                                                                     #
-  # Implement a vectorized version of the gradient for the structured SVM     #
-  # loss, storing the result in dW.                                           #
-  #                                                                           #
-  # Hint: Instead of computing the gradient from scratch, it may be easier    #
-  # to reuse some of the intermediate values that you used to compute the     #
-  # loss.                                                                     #
-  #############################################################################
-  """
-  Vectorized version
-  """
-
-
+  # step 5.2.1
+  # count 1 for each incorrect class scores which did not meet the margin
   count = maxMargin
+  count[count>0] = 1
 
-  # If original binary value > 0 meaning marginal >0, then we need to count that
-  # as 1 penalty, this way we binarize the thresh array ending with either 0 or 1
-  # 0 in pos(i,j) means the ith image 's jth class score is good already no loss
-
-  count[count > 0] = 1
-
-  # Sum up by column for each row, we get the count of the number of classes
-  # that didn’t meet the desired margin (and hence contributed to the loss function)
+  # step 5.2.2
+  # count number of class scores which did not meet the margi for each correct class
   col_sum = np.sum(count,axis = 1)
 
-  # Pass col sum into binary, the bad class scores for each image is passed into
-  # the correct class  position, and now each element of binary is the penalty or
-  # derivative coefficient for each class for each image
+  # step 5.2.3
+  # store the number to incorrect class to each correct class position for each image
   count[range(num_train),y] = -col_sum
 
+  # step 5.2.4
+  # get the dW
   """
-  How to understand this dot product intuitively
-  http://cs229.stanford.edu/section/cs229-linalg.pdf
-  p5 formula 1
-  p6 formula 3
+   How to understand this dot product intuitively
+   http://cs229.stanford.edu/section/cs229-linalg.pdf
+   p5 formula 1
+   p6 formula 3
 
-  we get dW.shape = (50,5)
-  each column is the derivative for corresponding class
+   we get dW.shape = (50,5)
+   each column is the derivative for corresponding class
   """
   dW = X.T.dot(count)
 
-  """
-
-  for method
-
-  vdW = np.zeros(W.shape)
-  i,j = np.nonzero(vMargin>0)
-  for ii,jj in zip(i,j):
-    vdW[:,y[ii]] -= X[ii,:]
-    vdW[:,jj] += X[ii,:]
-
-  idx = (j == y[i])
-  vdWCorr = np.zeros(W.shape)# if j == y[i]
-  for ii,jj in zip(i[idx],j[idx]):
-    vdWCorr[:,y[ii]] += X[ii,:]
-    vdWCorr[:,jj] -= X[ii,:]
-
-  vdW -= vdWCorr
-  dW = vdW
-
-
-  """
-
+  # step 6
+  # take the average and add reg to loss and dW
   # Right now the gradient is a sum over all training examples, but we want it
   # to be an average instead so we divide by num_train.
+  loss /= num_train
+  loss += 0.5 * reg * np.sum(W*W)
+
   dW /= num_train
-  # Add regularization to the gradient.
   dW += reg*W
+
+
 
   #############################################################################
   #                             END OF YOUR CODE                              #
