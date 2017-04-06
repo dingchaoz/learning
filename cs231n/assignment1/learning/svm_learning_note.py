@@ -50,3 +50,12 @@ setting delta margin to 1 as the magnitudes of W had direct effect on the scores
 controlled by the regularization penalty.
 
 """
+
+import numpy as np
+W = np.random.randn(50,5)
+X = np.random.randn(500,50)
+y = np.random.randint(5,size = 500)
+reg = 0.1
+
+
+

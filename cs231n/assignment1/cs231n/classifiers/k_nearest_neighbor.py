@@ -127,6 +127,7 @@ class KNearestNeighbor(object):
     # SqSumXtraintest = np.tile(SqSumXtrain,(num_test,1)) + SqSumXtest.reshape(num_test,1)
     dots = X.dot(self.X_train.T)
     dists = SqSumXtest.reshape(num_test,1)- 2*dots + SqSumXtrain
+    # the reshape is equialent
 
     #########################################################################
     #                         END OF YOUR CODE                              #
