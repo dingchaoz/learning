@@ -102,10 +102,10 @@ def svm_loss_vectorized(W, X, y, reg):
   vMargin[range(num_train),y] = 0
 
   # np.maximum compares 2 arrays and return element wise maximum of x1,x2
-  thresh = np.maximum(np.zeros(vMargin.shape),vMargin)
+  maxMargin = np.maximum(np.zeros(vMargin.shape),vMargin)
 
   # sum up to a scalar loss value
-  loss = np.sum(thresh)
+  loss = np.sum(maxMargin)
 
 
   """
@@ -144,16 +144,33 @@ def svm_loss_vectorized(W, X, y, reg):
   """
 
 
-  binary = thresh
-  binary[binary > 0] = 1
+  count = maxMargin
 
-  col_sum = np.sum(binary,axis = 1)
-  binary[range(num_train),y] = -col_sum
+  # If original binary value > 0 meaning marginal >0, then we need to count that
+  # as 1 penalty, this way we binarize the thresh array ending with either 0 or 1
+  # 0 in pos(i,j) means the ith image 's jth class score is good already no loss
+
+  count[count > 0] = 1
+
+  # Sum up by column for each row, we get the count of the number of classes
+  # that didn’t meet the desired margin (and hence contributed to the loss function)
+  col_sum = np.sum(count,axis = 1)
+
+  # Pass col sum into binary, the bad class scores for each image is passed into
+  # the correct class  position, and now each element of binary is the penalty or
+  # derivative coefficient for each class for each image
+  count[range(num_train),y] = -col_sum
 
   """
   How to understand this dot product intuitively
+  http://cs229.stanford.edu/section/cs229-linalg.pdf
+  p5 formula 1
+  p6 formula 3
+
+  we get dW.shape = (50,5)
+  each column is the derivative for corresponding class
   """
-  dW = X.T.dot(binary)
+  dW = X.T.dot(count)
 
   """
 
