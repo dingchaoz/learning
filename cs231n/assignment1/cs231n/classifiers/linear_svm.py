@@ -87,14 +87,23 @@ def svm_loss_vectorized(W, X, y, reg):
   # Broadcast subtraction, the commented also works
   # vMargin = (vScores.T - vCorrect_class_score + 1).T
   vMargin = vScores - np.reshape(vCorrect_class_score,(num_train,1)) + 1
-  vLoss = 0.0
+
+  """
+  method 1
+
+  """
+  vMargin[np.arange(num_train),y] = 0
+  thresh = np.maximum(np.zeros((num_train,num_classes)),vMargin)
+  loss = np.sum(thresh)
 
 
+  """
+  method 2
+  """
   # if j == y[i] do not include in loss (or dW)
-  mask = np.zeros(vMargin.shape)
-  mask[range(num_train),y] = 1  
-  vLoss = (vMargin-mask)[vMargin>0].sum()
-  loss = vLoss
+  # mask = np.zeros(vMargin.shape)
+  # mask[range(num_train),y] = 1
+  # loss = (vMargin-mask)[vMargin>0].sum()
 
   # Right now the loss is a sum over all training examples, but we want it
   # to be an average instead so we divide by num_train.
@@ -117,6 +126,20 @@ def svm_loss_vectorized(W, X, y, reg):
   # to reuse some of the intermediate values that you used to compute the     #
   # loss.                                                                     #
   #############################################################################
+  """
+  Vectorized version
+  """
+  binary = thresh
+  binary[thresh > 0] = 1
+
+  col_sum = np.sum(binary,axis = 1)
+  binary[range(num_train),y] = -col_sum[range(num_train)]
+  dW = np.dot(X.T,binary)
+
+  """
+
+  for method
+
   vdW = np.zeros(W.shape)
   i,j = np.nonzero(vMargin>0)
   for ii,jj in zip(i,j):
@@ -131,6 +154,10 @@ def svm_loss_vectorized(W, X, y, reg):
 
   vdW -= vdWCorr
   dW = vdW
+
+
+  """
+
   # Right now the gradient is a sum over all training examples, but we want it
   # to be an average instead so we divide by num_train.
   dW /= num_train
