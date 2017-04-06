@@ -82,28 +82,41 @@ def svm_loss_vectorized(W, X, y, reg):
   num_train = X.shape[0]
   loss = 0.0
   vScores = X.dot(W)
-  vCorrect_class_score = vScores[range(len(y)), y]
 
-  # Broadcast subtraction, the commented also works
-  # vMargin = (vScores.T - vCorrect_class_score + 1).T
+  """
+  Get the correct class score for each X,the V[range(a),range(b)] is a fast 2d indexing
+  e.g. vScores[range(2),np.array([3,2])] is equivalent to
+  np.array([vScores[0,3],vScores[1,2]])
+
+  """
+  vCorrect_class_score = vScores[range(num_train), y]
+
+  # Broadcast to compute margin
   vMargin = vScores - np.reshape(vCorrect_class_score,(num_train,1)) + 1
 
   """
   method 1
 
   """
-  vMargin[np.arange(num_train),y] = 0
-  thresh = np.maximum(np.zeros((num_train,num_classes)),vMargin)
+  # assign all the correct class margin entry as 0
+  vMargin[range(num_train),y] = 0
+
+  # np.maximum compares 2 arrays and return element wise maximum of x1,x2
+  thresh = np.maximum(np.zeros(vMargin.shape),vMargin)
+
+  # sum up to a scalar loss value
   loss = np.sum(thresh)
 
 
   """
   method 2
-  """
+
   # if j == y[i] do not include in loss (or dW)
-  # mask = np.zeros(vMargin.shape)
-  # mask[range(num_train),y] = 1
-  # loss = (vMargin-mask)[vMargin>0].sum()
+  mask = np.zeros(vMargin.shape)
+  mask[range(num_train),y] = 1
+  loss = (vMargin-mask)[vMargin>0].sum()
+  """
+
 
   # Right now the loss is a sum over all training examples, but we want it
   # to be an average instead so we divide by num_train.
@@ -129,12 +142,18 @@ def svm_loss_vectorized(W, X, y, reg):
   """
   Vectorized version
   """
+
+
   binary = thresh
-  binary[thresh > 0] = 1
+  binary[binary > 0] = 1
 
   col_sum = np.sum(binary,axis = 1)
-  binary[range(num_train),y] = -col_sum[range(num_train)]
-  dW = np.dot(X.T,binary)
+  binary[range(num_train),y] = -col_sum
+
+  """
+  How to understand this dot product intuitively
+  """
+  dW = X.T.dot(binary)
 
   """
 
