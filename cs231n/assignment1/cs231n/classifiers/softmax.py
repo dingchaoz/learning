@@ -39,7 +39,7 @@ def softmax_loss_naive(W, X, y, reg):
   for i in xrange(num_train):
     scores = X[i].dot(W)
     correct_class_score = scores[y[i]]
-    for j in xrange(num_classes):
+    for j in xrange(num_class):
       if j == y[i]:
         continue      
       margin = scores[j] - correct_class_score + 1 # note delta = 1

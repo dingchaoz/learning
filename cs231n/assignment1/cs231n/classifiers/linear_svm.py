@@ -20,22 +20,6 @@ def svm_loss_naive(W, X, y, reg):
   - gradient with respect to weights W; an array of same shape as W
   """
 
-  """
-  steps to implement vectorized loss and gradient computation
-  1. initialize placeholder dW and loss
-  2. compute score function
-  3. compute margin function
-  4. compute maximum compare between margin and 0
-  5.1 sum up the margin > 0 equals total loss
-  5.2 to get dW
-      5.2.1 count the number of class scores did not meet the margin, dWyi equals to the
-      Xi dimension scaled by this number
-      5.2.1 count 1 for each of the class j's score did not meet the margin, dWj(j != yi)
-      equals to the Xi dimension
-      5.2.3 we construct an np array named count to store the above 2 steps counts
-      count is 500x5 dimension, it stores the number of scale coefficient for each image
-      5.2.4 dW = X.T.dot(count)
-  """
 
   dW = np.zeros(W.shape) # initialize the gradient as zero
 
@@ -86,6 +70,24 @@ def svm_loss_vectorized(W, X, y, reg):
   Structured SVM loss function, vectorized implementation.
 
   Inputs and outputs are the same as svm_loss_naive.
+
+  """
+
+  """
+  steps to implement vectorized loss and gradient computation
+  1. initialize placeholder dW and loss
+  2. compute score function
+  3. compute margin function
+  4. compute maximum compare between margin and 0
+  5.1 sum up the margin > 0 equals total loss
+  5.2 to get dW
+      5.2.1 count the number of class scores did not meet the margin, dWyi equals to the
+      Xi dimension scaled by this number
+      5.2.1 count 1 for each of the class j's score did not meet the margin, dWj(j != yi)
+      equals to the Xi dimension
+      5.2.3 we construct an np array named count to store the above 2 steps counts
+      count is 500x5 dimension, it stores the number of scale coefficient for each image
+      5.2.4 dW = X.T.dot(count)
   """
 
   # step 1
