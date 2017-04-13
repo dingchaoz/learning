@@ -37,19 +37,32 @@ def softmax_loss_naive(W, X, y, reg):
   # also look into the above discussion to make sure you got the softmax gradient worked right
   loss = 0.0
   for i in xrange(num_train):
+    # Get score of all class for the image
     scores = X[i].dot(W)
-    correct_class_score = scores[y[i]]
+
+    # Subtract the max score for stability
+    scores -= np.max(scores)
+
+
+    # Get the exp scores
+    exp_scores = np.exp(scores)/np.sum(np.exp(scores))
+
+    # Get the softmax score which is the correct class normalized exp score
+    softmax_score = exp_scores[y[i]]
+
+    # Compute loss
+    loss += -np.log(softmax_score)
+
+    # Compute gradient
+    # http://eli.thegreenplace.net/2016/the-softmax-function-and-its-derivative/
+
     for j in xrange(num_class):
       if j == y[i]:
-        continue      
-      margin = scores[j] - correct_class_score + 1 # note delta = 1
-      if margin > 0:
-        loss += margin
-        dW[:,j] += X[i].T
-        count += 1
+        dW[:,j] += -X[i].T + exp_scores[j] * X[i].T
+      else:
+        dW[:,j] += X[i].T * exp_scores[j]
 
-    # Per http://cs231n.github.io/optimization-1/    
-    dW[:,y[i]] -= count * X[i].T
+
   # Right now the loss is a Wsum over all training examples, but we want it
   # to be an average instead so we divide by num_train.
   loss /= num_train
