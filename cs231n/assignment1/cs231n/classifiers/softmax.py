@@ -114,7 +114,7 @@ def softmax_loss_vectorized(W, X, y, reg):
   loss = np.sum(-np.log(softmax_score))
 
   # Compute gradient
-  # Compute the scale matrix of dW when j != yi
+  # Compute the scale matrix of dW for all j
   Scale = exp_scores
   # Now for j == yi, subtract 1
   Scale[range(num_train),y] -= 1
