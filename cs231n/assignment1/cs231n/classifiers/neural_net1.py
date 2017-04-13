@@ -39,11 +39,11 @@ class TwoLayerNet(object):
     self.params['W2'] = std * np.random.randn(hidden_size, output_size)
     self.params['b2'] = np.zeros(output_size)
 
+
   def loss(self, X, y=None, reg=0.0):
     """
     Compute the loss and gradients for a two layer fully connected neural
     network.
-
     Inputs:
     - X: Input data of shape (N, D). Each X[i] is a training sample.
     - y: Vector of training labels. y[i] is the label for X[i], and each y[i] is
@@ -51,11 +51,9 @@ class TwoLayerNet(object):
       is not passed then we only return scores, and if it is passed then we
       instead return the loss and gradients.
     - reg: Regularization strength.
-
     Returns:
     If y is None, return a matrix scores of shape (N, C) where scores[i, c] is
     the score for class c on input X[i].
-
     If y is not None, instead return a tuple of:
     - loss: Loss (data loss and regularization loss) for this batch of training
       samples.
@@ -74,16 +72,25 @@ class TwoLayerNet(object):
     # Store the result in the scores variable, which should be an array of      #
     # shape (N, C).                                                             #
     #############################################################################
-    pass
+    num_classes = W2.shape[1]
+    num_train = X.shape[0]
+
+    # Compute the output of hidden layer before relu activation
+    H1 = X.dot(W1) + b1
+    # Compute relu activated hidden layer output
+    relu1 = np.maximum(H1, np.zeros_like(H1))
+    # Compute the output of final layer
+    scores = relu1.dot(W2) + b2
+
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
-    
-    # If the targets are not given then jump out, we're done
+
+    # If no ground truth targets given, just return the score matrix, done
     if y is None:
       return scores
 
-    # Compute the loss
+    # Initiate the loss
     loss = None
     #############################################################################
     # TODO: Finish the forward pass, and compute the loss. This should include  #
@@ -92,19 +99,69 @@ class TwoLayerNet(object):
     # classifier loss. So that your results match ours, multiply the            #
     # regularization loss by 0.5                                                #
     #############################################################################
-    pass
+    """
+    The following code compute softmax loss which is implemented in softmax.py
+    """
+
+    log_c = -np.max(scores, axis=1)
+    exp_scores = np.exp(scores + log_c).reshape(num_train,1)
+    exp_correct_class = exp_scores[range(len(y)),y]
+    sum_exp_classes = np.sum(exp_scores, axis = 1)
+    softmax_score = exp_correct_class / sum_exp_classes
+    # Compute softmax loss
+    loss = np.sum(-np.log(softmax_score))
+
+    # Average loss
+    loss /= num_train
+    # Add regularization to the loss and gradient
+    loss += 0.5 * reg * (np.sum(W1 * W1) + np.sum(W2 * W2))
+
+    ### Note to self: Scores is correct but loss isn't yet.
+    # I think it isn't the regularization (alone) as that term is much smaller
+    # than the discrepancy between the correct loss and mine.
+
+
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
 
     # Backward pass: compute gradients
-    grads = {}
+
+    dW1 = np.zeros_like(W1)
+    dW2 = np.zeros_like(W2)
+    db1 = np.zeros_like(b1)
+    db2 = np.zeros_like(b2)
     #############################################################################
     # TODO: Compute the backward pass, computing the derivatives of the weights #
     # and biases. Store the results in the grads dictionary. For example,       #
     # grads['W1'] should store the gradient on W1, and be a matrix of same size #
     #############################################################################
-    pass
+
+    ### Gradient of loss wrt parameters through regularization
+    dRegularization = 1.0
+    dW1 += dRegularization * reg * W1
+    dW2 += dRegularization * reg * W2
+
+
+    # Carlos
+    dfyi = np.zeros(scores.shape).T
+    dfyi[y,range(N)] = 1
+    dfj = (np.exp(scores.T)/np.sum(np.exp(scores.T), axis = 0))
+    dScores = ((dfj - dfyi)/N).T
+
+    dW2 += dScores.T.dot(relu1).T
+
+    ### Gradient of scores wrt parameters
+    db2 += np.sum(dScores, axis=0)
+    # dW2 += np.sum(relu1.T.dot(dScores), axis=0)
+    dRelu1 = W2.dot(dScores.T)
+    dH1 = (H1 > 0) * dRelu1.T
+    db1 += np.sum(dH1, axis=0)
+    dW1 += X.T.dot(dH1)
+
+
+
+    grads = {'W1' : dW1, 'W2' : dW2, 'b1' : db1, 'b2' : db2}
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
