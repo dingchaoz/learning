@@ -104,7 +104,7 @@ def softmax_loss_vectorized(W, X, y, reg):
   # Subtract the max score for stability
   scores -= np.max(scores,axis = 1).reshape(num_train,1)
 
-  # Get the exp scores
+  # Get the normalized exp scores
   exp_scores = np.exp(scores)/np.sum(np.exp(scores),axis = 1).reshape(num_train,1)
 
   # Get the softmax score which is the correct class normalized exp score

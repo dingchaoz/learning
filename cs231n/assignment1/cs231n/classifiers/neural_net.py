@@ -68,12 +68,12 @@ class TwoLayerNet(object):
     # Store the result in the scores variable, which should be an array of      #
     # shape (N, C).                                                             #
     #############################################################################
-    num_classes = W2.shape[1]
-    num_images = X.shape[0]
 
+    # Compute the output of hidden layer before relu activation
     H1 = X.dot(W1) + b1
+    # Compute relu activated hidden layer output
     relu1 = np.maximum(H1, np.zeros_like(H1))
-    # scores = W2.T.dot(relu1.T).T + b2
+    # Compute the output of final layer
     scores = relu1.dot(W2) + b2
     
     #############################################################################
@@ -93,22 +93,20 @@ class TwoLayerNet(object):
     # classifier loss. So that your results match ours, multiply the            #
     # regularization loss by 0.5                                                #
     #############################################################################
-    log_c = -np.max(scores, axis=1)
-    exp_scores = np.exp((scores.T + log_c).T)
-    exp_correct_class = exp_scores[range(len(y)),y]
-    sum_exp_classes = np.sum(exp_scores, axis = 1)
-    softmax = exp_correct_class / sum_exp_classes
-    sum_loss = -np.log(softmax)
-    softmax_loss = np.mean(sum_loss)
-
-    W = np.hstack((W1.flatten(), W2.flatten(), b1.flatten(), b2.flatten()))
-
-    regularization = 0.5 * reg * (np.sum(W1 * W1) + np.sum(W2 * W2))
+    # Get the max score
+    max_score = np.max(scores, axis=1)
+    # Subtract the max score for stability
+    scores -= max_score.reshape(num_images,1)
+    # Compute normalized exp score
+    exp_scores = np.exp(scores) / np.sum(np.exp(scores), axis = 1).reshape(N,1)
+    # Get the softmax score which is the correct class normed exp score
+    softmax_score = exp_scores[range(N),y]
+    # Compute softmax loss
+    loss = np.sum(-np.log(softmax_score))
+    # Average loss
+    loss /= N
     # regularization = 0.5 * reg * np.sum(W * W)
-    loss = softmax_loss + regularization
-    ### Note to self: Scores is correct but loss isn't yet.
-    # I think it isn't the regularization (alone) as that term is much smaller
-    # than the discrepancy between the correct loss and mine.
+    loss += 0.5 * reg * (np.sum(W1 * W1) + np.sum(W2 * W2))
 
 
     #############################################################################
@@ -140,16 +138,6 @@ class TwoLayerNet(object):
     dScores = ((dfj - dfyi)/N).T
 
     dW2 += dScores.T.dot(relu1).T
-
-    ### Gradient of loss wrt scores
-    #dSoftmax_loss = 1.0
-    #dSum_loss = (1.0 / num_images) * dSoftmax_loss
-    #dSoftmax = (-1.0 / softmax) * dSum_loss
-    #dSum_exp_classes = - (1.0 / (sum_exp_classes * sum_exp_classes)) * dSoftmax
-    #dExp_correct_class = 1.0 * dSoftmax
-    #dExp_scores = np.asarray([dSum_exp_classes]).T * np.ones((1.0, num_classes))
-    #dExp_scores[range(len(y)),y] += dExp_correct_class
-    #dScores = exp_scores * dExp_scores
 
     ### Gradient of scores wrt parameters
     db2 += np.sum(dScores, axis=0)
